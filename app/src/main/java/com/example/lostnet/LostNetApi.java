@@ -14,19 +14,20 @@ public interface LostNetApi {
     @GET("/reportes")
     Call<List<ReporteModelo>> obtenerReportes();
 
-    // 2. Para enviar reporte completo (Foto + Datos)
+    // 2. Para enviar reporte completo (Foto + Datos + Token)
     @Multipart
     @POST("/reportar")
     Call<Object> enviarReporteCompleto(
             @Part("user_id") RequestBody userId,
             @Part("email") RequestBody email,
-            @Part("phone") RequestBody phone, // <--- CORRECCIÓN: Agregamos teléfono
+            @Part("phone") RequestBody phone,
             @Part("description") RequestBody description,
             @Part("category") RequestBody category,
             @Part("latitude") RequestBody latitude,
             @Part("longitude") RequestBody longitude,
             @Part("security_question") RequestBody question,
             @Part("secret_answer") RequestBody answer,
-            @Part MultipartBody.Part foto
+            @Part MultipartBody.Part foto,
+            @Part("fcm_token") RequestBody fcmToken // <--- ¡AQUÍ ESTÁ EL QUE FALTABA!
     );
 }

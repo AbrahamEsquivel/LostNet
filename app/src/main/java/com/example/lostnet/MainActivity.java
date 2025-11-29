@@ -22,6 +22,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 // Retrofit
 import java.util.List;
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleSignInClient mGoogleSignInClient;
     private LostNetApi api;
     private GoogleSignInAccount usuarioActual;
+    private String miTokenFCM = "";
     private static final int RC_SIGN_IN = 9001;
 
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
@@ -76,8 +78,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                miTokenFCM = task.getResult();
+                Log.d("LostNet", "Token obtenido: " + miTokenFCM);
+            }
+        });
 
         // 1. CONFIGURAR RETROFIT
         Retrofit retrofit = new Retrofit.Builder()
@@ -201,6 +211,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void enviarDatosAlServidor(String desc, String phone, String cat, String preg, String resp, LatLng gps) {
         Toast.makeText(this, "Enviando...", Toast.LENGTH_SHORT).show();
 
+
         // 1. Convertir Textos a RequestBody
         // OJO: Usamos 'usuarioActual' que viene del Login de Google
         RequestBody idPart = RequestBody.create(MediaType.parse("text/plain"), usuarioActual.getId());
@@ -214,6 +225,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         RequestBody lonPart = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(gps.longitude));
         RequestBody qPart = RequestBody.create(MediaType.parse("text/plain"), preg);
         RequestBody aPart = RequestBody.create(MediaType.parse("text/plain"), resp);
+        RequestBody tokenPart = RequestBody.create(MediaType.parse("text/plain"), miTokenFCM);
 
         // 2. Preparar Foto (Si existe)
         MultipartBody.Part fotoPart = null;
@@ -223,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         // 3. Enviar a la API
-        api.enviarReporteCompleto(idPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, qPart, aPart, fotoPart)
+        api.enviarReporteCompleto(idPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, qPart, aPart, fotoPart,tokenPart)
                 .enqueue(new Callback<Object>() {
                     @Override
                     public void onResponse(Call<Object> call, Response<Object> response) {
