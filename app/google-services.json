@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "770683038158",
+    "project_id": "lostnet-auth-3197b",
+    "storage_bucket": "lostnet-auth-3197b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:770683038158:android:fa21d9c8c84f0f6ffc639f",
+        "android_client_info": {
+          "package_name": "com.example.lostnet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDk01rLmzRaKLRDWHBhwvnn2i9yIDHNoPA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
