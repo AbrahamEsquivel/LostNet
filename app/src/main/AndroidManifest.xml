@@ -13,6 +13,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LostNet"
         android:usesCleartextTraffic="true">
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyBuhXNK51mkyxNeFt5LuWJiFspsI6hb49E" />
         <activity
             android:name=".MainActivity"
             android:exported="true">

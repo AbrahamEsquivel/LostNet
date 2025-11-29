@@ -1,34 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:padding="20dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/tvTitulo"
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <ImageView
+        android:src="@android:drawable/ic_menu_mylocation"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_centerInParent="true"
+        android:tint="#D32F2F" />
+
+    <Button
+        android:id="@+id/btnReportar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Bienvenido a LostNet"
-        android:textSize="24sp"
-        android:textStyle="bold" />
+        android:text="📍 Reportar Pérdida Aquí"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="40dp"
+        android:backgroundTint="#2563EB"
+        android:textColor="#FFFFFF" />
 
     <Button
         android:id="@+id/btnGoogle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Entrar con Google"
-        android:backgroundTint="#4285F4"
-        android:textColor="#FFFFFF" />
+        android:text="Login Google"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp" />
 
-    <TextView
-        android:id="@+id/tvEstado"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="Estado: Desconectado"
-        android:textAlignment="center" />
-
-</LinearLayout>
+</RelativeLayout>
