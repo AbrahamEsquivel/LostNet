@@ -79,8 +79,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // 1. CONFIGURAR RETROFIT (Backend P2)
-        // ¡CAMBIAR IP POR LA DE ZEROTIER DEL APP-SERVER!
+        // 1. CONFIGURAR RETROFIT
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("http://10.155.13.137:5000/")
                 .addConverterFactory(GsonConverterFactory.create())
@@ -150,41 +149,43 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // --- LÓGICA DE REPORTE (POST) ---
     private void reportarUbicacionCentral() {
-        // 1. Inflar el diseño del diálogo
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_reporte, null);
         builder.setView(view);
         AlertDialog dialog = builder.create();
 
-        // 2. Vincular vistas
+        // Vincular controles
         EditText etDesc = view.findViewById(R.id.etDescripcion);
+        EditText etTel = view.findViewById(R.id.etTelefono); // <--- NUEVO
         EditText etPreg = view.findViewById(R.id.etPregunta);
         EditText etResp = view.findViewById(R.id.etRespuesta);
         Spinner spinner = view.findViewById(R.id.spinnerCategoria);
         imgPreviewRef = view.findViewById(R.id.imgPreview);
 
         // Llenar Spinner
-        String[] categorias = {"Electrónica", "Documentos", "Ropa", "Llaves", "Otros"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, categorias);
-        spinner.setAdapter(adapter);
+        String[] cats = {"Electrónica", "Documentos", "Ropa", "Otros"};
+        spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, cats));
 
-        // 3. Botón Cámara
+        // Botón Cámara
         view.findViewById(R.id.btnTomarFoto).setOnClickListener(v -> {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             cameraLauncher.launch(intent);
         });
 
-        // 4. Botón Enviar (El Disparo Final)
+        // Botón Enviar
         view.findViewById(R.id.btnEnviarFinal).setOnClickListener(v -> {
-            LatLng centro = mMap.getCameraPosition().target;
-
-            // Validar datos mínimos
-            if(etDesc.getText().toString().isEmpty()) {
-                etDesc.setError("Requerido"); return;
+            if (etDesc.getText().toString().isEmpty() || etTel.getText().toString().isEmpty()) {
+                Toast.makeText(this, "Falta descripción o teléfono", Toast.LENGTH_SHORT).show();
+                return;
             }
 
+            // Tomar ubicación del centro del mapa
+            LatLng centro = mMap.getCameraPosition().target;
+
+            // LLAMAR A LA FUNCIÓN DE ENVÍO
             enviarDatosAlServidor(
                     etDesc.getText().toString(),
+                    etTel.getText().toString(), // <--- Pasamos el teléfono real
                     spinner.getSelectedItem().toString(),
                     etPreg.getText().toString(),
                     etResp.getText().toString(),
@@ -197,59 +198,49 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     // --- FUNCIÓN DE ENVÍO RETROFIT (MULTIPART) ---
-    private void enviarDatosAlServidor(String desc, String cat, String preg, String resp, LatLng gps) {
-        Toast.makeText(this, "Subiendo reporte...", Toast.LENGTH_SHORT).show();
+    private void enviarDatosAlServidor(String desc, String phone, String cat, String preg, String resp, LatLng gps) {
+        Toast.makeText(this, "Enviando...", Toast.LENGTH_SHORT).show();
 
-        // Crear partes de texto
+        // 1. Convertir Textos a RequestBody
+        // OJO: Usamos 'usuarioActual' que viene del Login de Google
         RequestBody idPart = RequestBody.create(MediaType.parse("text/plain"), usuarioActual.getId());
         RequestBody emailPart = RequestBody.create(MediaType.parse("text/plain"), usuarioActual.getEmail());
-        RequestBody phonePart = RequestBody.create(MediaType.parse("text/plain"), "555-APP-REAL"); // Aquí podrías pedir el tel real
+
+        // Datos del formulario
+        RequestBody phonePart = RequestBody.create(MediaType.parse("text/plain"), phone);
         RequestBody descPart = RequestBody.create(MediaType.parse("text/plain"), desc);
         RequestBody catPart = RequestBody.create(MediaType.parse("text/plain"), cat);
         RequestBody latPart = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(gps.latitude));
         RequestBody lonPart = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(gps.longitude));
-        RequestBody pregPart = RequestBody.create(MediaType.parse("text/plain"), preg);
-        RequestBody respPart = RequestBody.create(MediaType.parse("text/plain"), resp);
+        RequestBody qPart = RequestBody.create(MediaType.parse("text/plain"), preg);
+        RequestBody aPart = RequestBody.create(MediaType.parse("text/plain"), resp);
 
-        // Crear parte de la foto
+        // 2. Preparar Foto (Si existe)
         MultipartBody.Part fotoPart = null;
         if (archivoFotoFinal != null) {
             RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), archivoFotoFinal);
             fotoPart = MultipartBody.Part.createFormData("foto", archivoFotoFinal.getName(), requestFile);
         }
 
-        // Ejecutar
-        api.enviarReporteCompleto(idPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, pregPart, respPart, fotoPart)
+        // 3. Enviar a la API
+        api.enviarReporteCompleto(idPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, qPart, aPart, fotoPart)
                 .enqueue(new Callback<Object>() {
                     @Override
                     public void onResponse(Call<Object> call, Response<Object> response) {
-                        // 1. FORZAR HILO PRINCIPAL (UI THREAD)
                         runOnUiThread(() -> {
                             if (response.isSuccessful()) {
-                                Toast.makeText(MainActivity.this, "✅ ¡Reporte Publicado!", Toast.LENGTH_LONG).show();
-
-                                // 2. AGREGAR EL PIN MANUALMENTE (Para verlo al instante)
-                                LatLng pos = mMap.getCameraPosition().target;
-                                mMap.addMarker(new MarkerOptions()
-                                        .position(pos)
-                                        .title("Tu Nuevo Reporte")
-                                        .snippet("Acabas de subir esto"));
-
-                                // 3. RECARGAR DEL SERVIDOR (Opcional, para asegurar)
-                                cargarPinesDelServidor();
-
+                                Toast.makeText(MainActivity.this, "✅ ¡Enviado!", Toast.LENGTH_LONG).show();
+                                // Poner pin localmente para feedback instantáneo
+                                mMap.addMarker(new MarkerOptions().position(gps).title("Tu Reporte"));
                             } else {
-                                Toast.makeText(MainActivity.this, "❌ Error Servidor: " + response.code(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, "❌ Error Server: " + response.code(), Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
 
                     @Override
                     public void onFailure(Call<Object> call, Throwable t) {
-                        // TAMBIÉN AQUÍ
-                        runOnUiThread(() -> {
-                            Toast.makeText(MainActivity.this, "💀 Fallo red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        });
+                        runOnUiThread(() -> Toast.makeText(MainActivity.this, "💀 Fallo red: " + t.getMessage(), Toast.LENGTH_LONG).show());
                     }
                 });
     }

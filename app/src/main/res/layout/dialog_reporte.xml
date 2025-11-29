@@ -10,70 +10,68 @@
         android:padding="20dp">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📝 Detalles del Objeto"
+            android:text="📝 Reportar Objeto"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="15dp"/>
 
         <ImageView
             android:id="@+id/imgPreview"
             android:layout_width="match_parent"
-            android:layout_height="200dp"
+            android:layout_height="180dp"
             android:src="@android:drawable/ic_menu_camera"
+            android:background="#EEEEEE"
             android:scaleType="centerInside"
-            android:background="#E0E0E0"
             android:layout_marginBottom="10dp"/>
 
         <Button
             android:id="@+id/btnTomarFoto"
+            android:text="📸 FOTO"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <EditText
+            android:id="@+id/etTelefono"
+            android:hint="Tu WhatsApp (+52...)"
+            android:inputType="phone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📸 Tomar Foto" />
+            android:layout_marginTop="10dp"/>
 
-        <TextView android:text="Categoría:" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <EditText
+            android:id="@+id/etDescripcion"
+            android:hint="Descripción (Ej. Cartera Negra)"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <TextView android:text="Categoría:" android:layout_marginTop="10dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
         <Spinner
             android:id="@+id/spinnerCategoria"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginBottom="10dp"/>
+            android:layout_height="48dp"/>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Descripción (Ej. Cartera negra marca X)">
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etDescripcion"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🛡️ Seguridad (Para reclamar)"
-            android:textStyle="bold"
-            android:layout_marginTop="15dp"/>
+        <TextView android:text="🔒 Seguridad:" android:textStyle="bold" android:layout_marginTop="15dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
 
         <EditText
             android:id="@+id/etPregunta"
+            android:hint="Pregunta Secreta"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Pregunta (Ej. ¿Qué hay adentro?)"/>
+            android:layout_height="wrap_content"/>
 
         <EditText
             android:id="@+id/etRespuesta"
+            android:hint="Respuesta Secreta"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Respuesta Secreta (Ej. Una foto de mi perro)"/>
+            android:layout_height="wrap_content"/>
 
         <Button
             android:id="@+id/btnEnviarFinal"
+            android:text="ENVIAR REPORTE"
+            android:backgroundTint="#4CAF50"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🚀 ENVIAR REPORTE"
-            android:backgroundTint="#4CAF50"
             android:layout_marginTop="20dp"/>
 
     </LinearLayout>

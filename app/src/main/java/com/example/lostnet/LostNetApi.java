@@ -10,24 +10,23 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 
 public interface LostNetApi {
-
-    // Endpoint para LEER (Mapa)
+    // 1. Para leer el mapa
     @GET("/reportes")
     Call<List<ReporteModelo>> obtenerReportes();
 
-    // Endpoint para ESCRIBIR (Formulario Complejo)
+    // 2. Para enviar reporte completo (Foto + Datos)
     @Multipart
     @POST("/reportar")
     Call<Object> enviarReporteCompleto(
             @Part("user_id") RequestBody userId,
             @Part("email") RequestBody email,
-            @Part("phone") RequestBody phone,
+            @Part("phone") RequestBody phone, // <--- CORRECCIÓN: Agregamos teléfono
             @Part("description") RequestBody description,
             @Part("category") RequestBody category,
             @Part("latitude") RequestBody latitude,
             @Part("longitude") RequestBody longitude,
             @Part("security_question") RequestBody question,
             @Part("secret_answer") RequestBody answer,
-            @Part MultipartBody.Part foto // <--- La foto
+            @Part MultipartBody.Part foto
     );
 }
