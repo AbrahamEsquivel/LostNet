@@ -11,7 +11,7 @@
 
         <TextView
             android:text="📝 Reportar Objeto"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -20,7 +20,7 @@
         <ImageView
             android:id="@+id/imgPreview"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="200dp"
             android:src="@android:drawable/ic_menu_camera"
             android:background="#EEEEEE"
             android:scaleType="centerInside"
@@ -28,41 +28,51 @@
 
         <Button
             android:id="@+id/btnTomarFoto"
-            android:text="📸 FOTO"
+            android:text="📸 Tomar Foto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <EditText
-            android:id="@+id/etTelefono"
-            android:hint="Tu WhatsApp (+52...)"
-            android:inputType="phone"
+            android:id="@+id/etDescripcion"
+            android:hint="Descripción (Ej. Mochila azul)"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"/>
 
         <EditText
-            android:id="@+id/etDescripcion"
-            android:hint="Descripción (Ej. Cartera Negra)"
+            android:id="@+id/etTelefono"
+            android:hint="WhatsApp de contacto (+52...)"
+            android:inputType="phone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
-        <TextView android:text="Categoría:" android:layout_marginTop="10dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <TextView
+            android:text="Categoría:"
+            android:layout_marginTop="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
         <Spinner
             android:id="@+id/spinnerCategoria"
             android:layout_width="match_parent"
             android:layout_height="48dp"/>
 
-        <TextView android:text="🔒 Seguridad:" android:textStyle="bold" android:layout_marginTop="15dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+        <TextView
+            android:text="🔒 Pregunta de Seguridad (Para validar al dueño)"
+            android:textStyle="bold"
+            android:layout_marginTop="20dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
 
         <EditText
             android:id="@+id/etPregunta"
-            android:hint="Pregunta Secreta"
+            android:hint="Pregunta (Ej. ¿Qué marca es?)"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <EditText
             android:id="@+id/etRespuesta"
-            android:hint="Respuesta Secreta"
+            android:hint="Respuesta Secreta (Ej. Nike)"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 

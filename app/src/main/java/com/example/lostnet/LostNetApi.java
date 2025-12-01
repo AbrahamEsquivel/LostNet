@@ -10,11 +10,12 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 
 public interface LostNetApi {
-    // 1. Para leer el mapa
+
+    // 1. OBTENER REPORTES (Para el Mapa - GET)
     @GET("/reportes")
     Call<List<ReporteModelo>> obtenerReportes();
 
-    // 2. Para enviar reporte completo (Foto + Datos + Token)
+    // 2. ENVIAR REPORTE (Multipart - POST)
     @Multipart
     @POST("/reportar")
     Call<Object> enviarReporteCompleto(
@@ -28,6 +29,6 @@ public interface LostNetApi {
             @Part("security_question") RequestBody question,
             @Part("secret_answer") RequestBody answer,
             @Part MultipartBody.Part foto,
-            @Part("fcm_token") RequestBody fcmToken // <--- ¡AQUÍ ESTÁ EL QUE FALTABA!
+            @Part("fcm_token") RequestBody fcmToken // <--- ¡ESTA ES LA QUE FALTABA! (La #11)
     );
 }

@@ -1,10 +1,22 @@
 package com.example.lostnet;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.Toast;
+import android.app.AlertDialog;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 // Google Maps
@@ -22,37 +34,23 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
+
+// Firebase FCM
 import com.google.firebase.messaging.FirebaseMessaging;
 
-// Retrofit
+// Retrofit & Networking
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
-
-import android.app.AlertDialog;
-import android.graphics.Bitmap;
-import android.provider.MediaStore;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.Spinner;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -62,36 +60,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleSignInClient mGoogleSignInClient;
     private LostNetApi api;
     private GoogleSignInAccount usuarioActual;
-    private String miTokenFCM = "";
+    private String miTokenFCM = ""; // Aquí guardaremos el token
     private static final int RC_SIGN_IN = 9001;
 
+    // Lanzador de la Cámara
     private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Bitmap photo = (Bitmap) result.getData().getExtras().get("data");
                     if(imgPreviewRef != null) imgPreviewRef.setImageBitmap(photo);
-                    // Guardar bitmap en archivo temporal para enviar
                     archivoFotoFinal = bitmapToFile(photo);
                 }
             });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // 0. OBTENER TOKEN DE FIREBASE (Para notificaciones)
         FirebaseMessaging.getInstance().getToken().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 miTokenFCM = task.getResult();
-                Log.d("LostNet", "Token obtenido: " + miTokenFCM);
+                Log.d("LostNet", "Token FCM obtenido: " + miTokenFCM);
+            } else {
+                Log.w("LostNet", "Fallo obteniendo token FCM", task.getException());
             }
         });
 
-        // 1. CONFIGURAR RETROFIT
+        // 1. CONFIGURAR RETROFIT (Backend P2)
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://10.155.13.137:5000/")
+                .baseUrl("http://10.155.13.137:5000/") // IP de ZeroTier de P2
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         api = retrofit.create(LostNetApi.class);
@@ -126,12 +126,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        // Mover cámara a Aguascalientes (o donde quieran iniciar)
+        // Mover cámara a Aguascalientes
         LatLng aguascalientes = new LatLng(21.88, -102.29);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(aguascalientes, 14));
-
-        // Cargar los reportes existentes (GET)
+        // Cargar pines
         cargarPinesDelServidor();
     }
 
@@ -140,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(Call<List<ReporteModelo>> call, Response<List<ReporteModelo>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    mMap.clear(); // Limpiar para no duplicar
+                    mMap.clear();
                     for (ReporteModelo reporte : response.body()) {
                         LatLng pos = new LatLng(reporte.latitude, reporte.longitude);
                         mMap.addMarker(new MarkerOptions()
@@ -157,45 +155,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    // --- LÓGICA DE REPORTE (POST) ---
+    // --- LÓGICA DE REPORTE (DIALOGO) ---
     private void reportarUbicacionCentral() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_reporte, null);
         builder.setView(view);
         AlertDialog dialog = builder.create();
 
-        // Vincular controles
         EditText etDesc = view.findViewById(R.id.etDescripcion);
-        EditText etTel = view.findViewById(R.id.etTelefono); // <--- NUEVO
+        EditText etTel = view.findViewById(R.id.etTelefono);
         EditText etPreg = view.findViewById(R.id.etPregunta);
         EditText etResp = view.findViewById(R.id.etRespuesta);
         Spinner spinner = view.findViewById(R.id.spinnerCategoria);
         imgPreviewRef = view.findViewById(R.id.imgPreview);
 
-        // Llenar Spinner
         String[] cats = {"Electrónica", "Documentos", "Ropa", "Otros"};
         spinner.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, cats));
 
-        // Botón Cámara
         view.findViewById(R.id.btnTomarFoto).setOnClickListener(v -> {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             cameraLauncher.launch(intent);
         });
 
-        // Botón Enviar
         view.findViewById(R.id.btnEnviarFinal).setOnClickListener(v -> {
             if (etDesc.getText().toString().isEmpty() || etTel.getText().toString().isEmpty()) {
                 Toast.makeText(this, "Falta descripción o teléfono", Toast.LENGTH_SHORT).show();
                 return;
             }
-
-            // Tomar ubicación del centro del mapa
             LatLng centro = mMap.getCameraPosition().target;
 
-            // LLAMAR A LA FUNCIÓN DE ENVÍO
+            // ENVIAR DATOS
             enviarDatosAlServidor(
                     etDesc.getText().toString(),
-                    etTel.getText().toString(), // <--- Pasamos el teléfono real
+                    etTel.getText().toString(),
                     spinner.getSelectedItem().toString(),
                     etPreg.getText().toString(),
                     etResp.getText().toString(),
@@ -207,17 +199,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         dialog.show();
     }
 
-    // --- FUNCIÓN DE ENVÍO RETROFIT (MULTIPART) ---
+    // --- FUNCIÓN DE ENVÍO (RETROFIT MULTIPART) ---
     private void enviarDatosAlServidor(String desc, String phone, String cat, String preg, String resp, LatLng gps) {
         Toast.makeText(this, "Enviando...", Toast.LENGTH_SHORT).show();
 
-
         // 1. Convertir Textos a RequestBody
-        // OJO: Usamos 'usuarioActual' que viene del Login de Google
         RequestBody idPart = RequestBody.create(MediaType.parse("text/plain"), usuarioActual.getId());
         RequestBody emailPart = RequestBody.create(MediaType.parse("text/plain"), usuarioActual.getEmail());
-
-        // Datos del formulario
         RequestBody phonePart = RequestBody.create(MediaType.parse("text/plain"), phone);
         RequestBody descPart = RequestBody.create(MediaType.parse("text/plain"), desc);
         RequestBody catPart = RequestBody.create(MediaType.parse("text/plain"), cat);
@@ -225,24 +213,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         RequestBody lonPart = RequestBody.create(MediaType.parse("text/plain"), String.valueOf(gps.longitude));
         RequestBody qPart = RequestBody.create(MediaType.parse("text/plain"), preg);
         RequestBody aPart = RequestBody.create(MediaType.parse("text/plain"), resp);
+
+        // AGREGADO: Token FCM
         RequestBody tokenPart = RequestBody.create(MediaType.parse("text/plain"), miTokenFCM);
 
-        // 2. Preparar Foto (Si existe)
+        // 2. Preparar Foto
         MultipartBody.Part fotoPart = null;
         if (archivoFotoFinal != null) {
             RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), archivoFotoFinal);
             fotoPart = MultipartBody.Part.createFormData("foto", archivoFotoFinal.getName(), requestFile);
         }
 
-        // 3. Enviar a la API
-        api.enviarReporteCompleto(idPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, qPart, aPart, fotoPart,tokenPart)
+        // 3. Llamada a la API con 11 argumentos
+        api.enviarReporteCompleto(idPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, qPart, aPart, fotoPart, tokenPart)
                 .enqueue(new Callback<Object>() {
                     @Override
                     public void onResponse(Call<Object> call, Response<Object> response) {
                         runOnUiThread(() -> {
                             if (response.isSuccessful()) {
-                                Toast.makeText(MainActivity.this, "✅ ¡Enviado!", Toast.LENGTH_LONG).show();
-                                // Poner pin localmente para feedback instantáneo
+                                Toast.makeText(MainActivity.this, "✅ ¡Enviado y Replicado!", Toast.LENGTH_LONG).show();
                                 mMap.addMarker(new MarkerOptions().position(gps).title("Tu Reporte"));
                             } else {
                                 Toast.makeText(MainActivity.this, "❌ Error Server: " + response.code(), Toast.LENGTH_SHORT).show();
@@ -256,23 +245,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
     }
-
-    // --- UTILIDAD: CONVERTIR BITMAP A ARCHIVO ---
-    private File bitmapToFile(Bitmap bitmap) {
-        try {
-            File f = new File(getCacheDir(), "foto_temp.jpg");
-            f.createNewFile();
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bos);
-            byte[] bitmapdata = bos.toByteArray();
-            FileOutputStream fos = new FileOutputStream(f);
-            fos.write(bitmapdata);
-            fos.flush();
-            fos.close();
-            return f;
-        } catch (Exception e) { return null; }
-    }
-
 
     // --- LÓGICA DE LOGIN GOOGLE ---
     private void signIn() {
@@ -288,12 +260,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             try {
                 usuarioActual = task.getResult(ApiException.class);
                 Toast.makeText(this, "Hola: " + usuarioActual.getDisplayName(), Toast.LENGTH_SHORT).show();
-                // Ocultar botón de login o cambiar texto
                 Button btn = findViewById(R.id.btnGoogle);
                 btn.setText("👤 " + usuarioActual.getDisplayName());
             } catch (ApiException e) {
                 Log.w("LostNet", "Login fallido code=" + e.getStatusCode());
             }
         }
+    }
+
+    // --- UTILERÍA ---
+    private File bitmapToFile(Bitmap bitmap) {
+        try {
+            File f = new File(getCacheDir(), "foto_temp_" + System.currentTimeMillis() + ".jpg");
+            f.createNewFile();
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, bos);
+            byte[] bitmapdata = bos.toByteArray();
+            FileOutputStream fos = new FileOutputStream(f);
+            fos.write(bitmapdata);
+            fos.flush();
+            fos.close();
+            return f;
+        } catch (Exception e) { return null; }
     }
 }
