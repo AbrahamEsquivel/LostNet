@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -10,7 +11,9 @@
         android:gravity="center"
         android:orientation="vertical"
         android:background="#FFFFFF"
-        android:elevation="10dp">
+        android:elevation="10dp"
+        android:clickable="true"
+        android:focusable="true">
 
         <com.google.android.gms.common.SignInButton
             android:id="@+id/sign_in_button"
@@ -29,19 +32,31 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:src="@android:drawable/ic_menu_myplaces"
-        android:tint="#D32F2F"
+        app:tint="#D32F2F"
         android:layout_centerInParent="true"
         android:layout_marginBottom="20dp" />
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fabReportar"
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabNotificaciones"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="32dp"
-        android:text="REPORTAR AQUÍ"
-        android:backgroundTint="#D32F2F"
-        android:textColor="#FFF" />
+        android:src="@android:drawable/ic_popup_reminder"
+        android:backgroundTint="#FF9800"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="16dp"
+        app:tint="#FFFFFF" />
+
+    <Button
+        android:id="@+id/btnMisReportes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mis Reportes"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/btnCerrarSesion"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="8dp"/>
+
     <Button
         android:id="@+id/btnCerrarSesion"
         android:layout_width="wrap_content"
@@ -54,26 +69,15 @@
         android:layout_marginTop="40dp"
         android:layout_marginEnd="16dp"/>
 
-    <Button
-        android:id="@+id/btnMisReportes"
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabReportar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Mis Reportes"
-        android:layout_alignParentTop="true"
-        android:layout_toStartOf="@id/btnCerrarSesion"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="8dp"/>
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabNotificaciones"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_popup_reminder"
-        android:backgroundTint="#FF9800"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_margin="16dp"
-        app:tint="#FFF" />
-
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="32dp"
+        android:text="REPORTAR AQUÍ"
+        android:backgroundTint="#D32F2F"
+        android:textColor="#FFF" />
 
 </RelativeLayout>

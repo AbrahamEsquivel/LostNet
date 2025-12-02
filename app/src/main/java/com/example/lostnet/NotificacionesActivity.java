@@ -23,22 +23,23 @@ public class NotificacionesActivity extends AppCompatActivity {
     private AlertasAdapter adapter;
     private List<AlertaModelo> listaAlertas;
 
-    // IP DEL SERVIDOR
+    // CAMBIA ESTO SI TU IP ES DIFERENTE
     private static final String BASE_URL = "http://10.155.13.137:5000/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_notificaciones); // Asegúrate de crear este XML
+        setContentView(R.layout.activity_notificaciones); // ¡Ahora sí existe!
 
-        recycler = findViewById(R.id.recyclerAlertas);
+        recycler = findViewById(R.id.recyclerAlertas); // ¡Ahora sí existe!
         recycler.setLayoutManager(new LinearLayoutManager(this));
         listaAlertas = new ArrayList<>();
 
-        // Configuración Retrofit (Con Timeouts largos por si acaso)
+        // Configuración Retrofit
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(60, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(true)
                 .build();
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -49,7 +50,6 @@ public class NotificacionesActivity extends AppCompatActivity {
 
         LostNetApi api = retrofit.create(LostNetApi.class);
 
-        // Obtener email del usuario
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null) {
             cargarAlertas(api, account.getEmail());
@@ -70,12 +70,14 @@ public class NotificacionesActivity extends AppCompatActivity {
                     if(listaAlertas.isEmpty()){
                         Toast.makeText(NotificacionesActivity.this, "Sin notificaciones nuevas", Toast.LENGTH_SHORT).show();
                     }
+                } else {
+                    Toast.makeText(NotificacionesActivity.this, "Error: " + response.code(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<List<AlertaModelo>> call, Throwable t) {
-                Toast.makeText(NotificacionesActivity.this, "Error cargando alertas", Toast.LENGTH_SHORT).show();
+                Toast.makeText(NotificacionesActivity.this, "Error red: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

@@ -16,6 +16,8 @@ public class AlertaModelo {
     private boolean read;
 
     // Getters
+    public String getId() { return id; }
     public String getMessage() { return message; }
     public long getTimestamp() { return timestamp; }
+    public boolean isRead() { return read; }
 }

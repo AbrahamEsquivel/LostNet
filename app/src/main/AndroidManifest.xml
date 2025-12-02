@@ -51,6 +51,7 @@
         </provider>
 
         <activity android:name=".MisReportesActivity" />
+        <activity android:name=".NotificacionesActivity" />
 
     </application>
 

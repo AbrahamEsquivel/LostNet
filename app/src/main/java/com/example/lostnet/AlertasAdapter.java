@@ -28,16 +28,20 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AlertaModelo alerta = lista.get(position);
         holder.txtMensaje.setText(alerta.getMessage());
+        // Aquí podrías formatear la fecha 'timestamp' si quisieras
+        holder.txtFecha.setText("ID: " + alerta.getId());
     }
 
     @Override
     public int getItemCount() { return lista.size(); }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txtMensaje;
+        TextView txtMensaje, txtFecha;
+
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             txtMensaje = itemView.findViewById(R.id.txtMensajeAlerta);
+            txtFecha = itemView.findViewById(R.id.txtFechaAlerta);
         }
     }
 }

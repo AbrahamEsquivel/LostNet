@@ -1,32 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cardCornerRadius="8dp"
-    app:cardBackgroundColor="#FFF3E0"
-    android:layout_margin="8dp"> <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="16dp"
-    android:gravity="center_vertical">
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFF8E1"
+    android:layout_margin="8dp">
 
-    <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@android:drawable/ic_dialog_alert"
-        app:tint="#E65100"
-        android:layout_marginEnd="16dp"/>
-
-    <TextView
-        android:id="@+id/txtMensajeAlerta"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="¡Alguien reportó un objeto cerca de ti!"
-        android:textColor="#E65100"
-        android:textStyle="bold"
-        android:textSize="16sp"/>
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
-</LinearLayout>
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_dialog_alert"
+            app:tint="#F57C00"
+            android:layout_marginEnd="16dp"
+            android:contentDescription="Icono Alerta"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtMensajeAlerta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mensaje de alerta..."
+                android:textColor="#E65100"
+                android:textStyle="bold"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/txtFechaAlerta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ID: 000"
+                android:textSize="12sp"
+                android:textColor="#757575"/>
+        </LinearLayout>
+
+    </LinearLayout>
 </androidx.cardview.widget.CardView>
