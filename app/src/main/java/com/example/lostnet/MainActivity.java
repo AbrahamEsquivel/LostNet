@@ -95,6 +95,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
+        findViewById(R.id.fabNotificaciones).setOnClickListener(v -> {
+            startActivity(new Intent(MainActivity.this, NotificacionesActivity.class));
+        });
         apiService = retrofit.create(LostNetApi.class);
 
         // 2. Configurar Login Google

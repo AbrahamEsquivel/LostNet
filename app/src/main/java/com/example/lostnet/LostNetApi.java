@@ -11,6 +11,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.DELETE; // Importar esto
 import retrofit2.http.Path;
+import retrofit2.http.Query;
 
 public interface LostNetApi {
 
@@ -36,4 +37,7 @@ public interface LostNetApi {
 
     @DELETE("/reportes/{id}")
     Call<ResponseBody> borrarReporte(@Path("id") String id);
+
+    @GET("/mis-alertas")
+    Call<List<AlertaModelo>> obtenerMisAlertas(@Query("email") String email);
 }
