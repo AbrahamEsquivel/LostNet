@@ -1,88 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:orientation="vertical">
 
         <TextView
-            android:text="📝 Reportar Objeto"
-            android:textSize="22sp"
+            android:text="Reportar Objeto Perdido"
+            android:textSize="20sp"
             android:textStyle="bold"
+            android:layout_marginBottom="16dp"
+            android:layout_gravity="center_horizontal"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="15dp"/>
+            android:layout_height="wrap_content"/>
 
-        <ImageView
-            android:id="@+id/imgPreview"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:src="@android:drawable/ic_menu_camera"
-            android:background="#EEEEEE"
-            android:scaleType="centerInside"
-            android:layout_marginBottom="10dp"/>
-
-        <Button
-            android:id="@+id/btnTomarFoto"
-            android:text="📸 Tomar Foto"
+        <EditText
+            android:id="@+id/etDesc"
+            android:hint="Descripción del objeto"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <EditText
-            android:id="@+id/etDescripcion"
-            android:hint="Descripción (Ej. Mochila azul)"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"/>
-
-        <EditText
-            android:id="@+id/etTelefono"
-            android:hint="WhatsApp de contacto (+52...)"
+            android:id="@+id/etPhone"
+            android:hint="Teléfono de contacto"
             android:inputType="phone"
+            android:layout_marginTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <TextView
             android:text="Categoría:"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
         <Spinner
-            android:id="@+id/spinnerCategoria"
+            android:id="@+id/spinnerCat"
             android:layout_width="match_parent"
-            android:layout_height="48dp"/>
-
-        <TextView
-            android:text="🔒 Pregunta de Seguridad (Para validar al dueño)"
-            android:textStyle="bold"
-            android:layout_marginTop="20dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="50dp"/>
 
         <EditText
-            android:id="@+id/etPregunta"
-            android:hint="Pregunta (Ej. ¿Qué marca es?)"
+            android:id="@+id/etSecQ"
+            android:hint="Pregunta de seguridad (Anti-robo)"
+            android:layout_marginTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <EditText
-            android:id="@+id/etRespuesta"
-            android:hint="Respuesta Secreta (Ej. Nike)"
+            android:id="@+id/etSecA"
+            android:hint="Respuesta secreta"
+            android:layout_marginTop="4dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
         <Button
-            android:id="@+id/btnEnviarFinal"
+            android:id="@+id/btnCamara"
+            android:text="Tomar Foto"
+            android:layout_marginTop="16dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <ImageView
+            android:id="@+id/imgPreview"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:layout_marginTop="8dp"
+            android:contentDescription="Vista previa de la foto"/>
+
+        <Button
+            android:id="@+id/btnEnviar"
             android:text="ENVIAR REPORTE"
             android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:layout_marginTop="16dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"/>
+            android:layout_height="wrap_content"/>
 
     </LinearLayout>
 </ScrollView>

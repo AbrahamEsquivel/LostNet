@@ -3,22 +3,25 @@ package com.example.lostnet;
 import java.util.List;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
+import retrofit2.http.DELETE; // Importar esto
+import retrofit2.http.Path;
 
 public interface LostNetApi {
 
-    // 1. OBTENER REPORTES (Para el Mapa - GET)
     @GET("/reportes")
     Call<List<ReporteModelo>> obtenerReportes();
 
-    // 2. ENVIAR REPORTE (Multipart - POST)
     @Multipart
     @POST("/reportar")
-    Call<Object> enviarReporteCompleto(
+
+
+    Call<ResponseBody> enviarReporte(
             @Part("user_id") RequestBody userId,
             @Part("email") RequestBody email,
             @Part("phone") RequestBody phone,
@@ -26,9 +29,11 @@ public interface LostNetApi {
             @Part("category") RequestBody category,
             @Part("latitude") RequestBody latitude,
             @Part("longitude") RequestBody longitude,
-            @Part("security_question") RequestBody question,
-            @Part("secret_answer") RequestBody answer,
-            @Part MultipartBody.Part foto,
-            @Part("fcm_token") RequestBody fcmToken // <--- ¡ESTA ES LA QUE FALTABA! (La #11)
+            @Part("security_question") RequestBody secQuestion,
+            @Part("secret_answer") RequestBody secAnswer,
+            @Part MultipartBody.Part foto
     );
+
+    @DELETE("/reportes/{id}")
+    Call<ResponseBody> borrarReporte(@Path("id") String id);
 }

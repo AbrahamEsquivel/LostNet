@@ -3,6 +3,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <LinearLayout
+        android:id="@+id/layoutLogin"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:background="#FFFFFF"
+        android:elevation="10dp">
+
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/sign_in_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
     <fragment
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
@@ -10,30 +25,44 @@
         android:layout_height="match_parent" />
 
     <ImageView
-        android:src="@android:drawable/ic_menu_mylocation"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:id="@+id/imgPinCentro"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@android:drawable/ic_menu_myplaces"
+        android:tint="#D32F2F"
         android:layout_centerInParent="true"
-        android:tint="#D32F2F" />
-
-    <Button
-        android:id="@+id/btnReportar"
+        android:layout_marginBottom="20dp" />
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fabReportar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="📍 Reportar Pérdida Aquí"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="40dp"
-        android:backgroundTint="#2563EB"
-        android:textColor="#FFFFFF" />
-
+        android:layout_marginBottom="32dp"
+        android:text="REPORTAR AQUÍ"
+        android:backgroundTint="#D32F2F"
+        android:textColor="#FFF" />
     <Button
-        android:id="@+id/btnGoogle"
+        android:id="@+id/btnCerrarSesion"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Login Google"
+        android:text="Salir"
+        android:textSize="10sp"
+        android:backgroundTint="#555555"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp" />
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="16dp"/>
+
+    <Button
+        android:id="@+id/btnMisReportes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mis Reportes"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@id/btnCerrarSesion"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="8dp"/>
+
 
 </RelativeLayout>

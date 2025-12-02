@@ -1,21 +1,30 @@
-package com.example.lostnet;
+package com.example.lostnet; // Asegúrate que sea tu paquete
+
+import com.google.gson.annotations.SerializedName;
 
 public class ReporteModelo {
-    String user_id;
-    String email;
-    String phone;
-    String description;
-    double latitude;
-    double longitude;
-    String fcm_token;
+    @SerializedName("id")
+    private String id;
+    @SerializedName("desc")
+    private String description;
+    @SerializedName("lat")
+    private double latitude;
+    @SerializedName("lon")
+    private double longitude;
+    @SerializedName("status")
+    private String status;
+    @SerializedName("photo_url")
+    private String photoUrl;
 
-    public ReporteModelo(String uid, String mail, String cel, String desc, double lat, double lon,String token) {
-        this.user_id = uid;
-        this.email = mail;
-        this.phone = cel;
-        this.description = desc;
-        this.latitude = lat;
-        this.longitude = lon;
-        this.fcm_token = token;
-    }
+    // --- NUEVO CAMPO NECESARIO ---
+    @SerializedName("user_id")
+    private String userId;
+
+    // Getters
+    public String getId() { return id; }
+    public double getLatitude() { return latitude; }
+    public double getLongitude() { return longitude; }
+    public String getDescription() { return description; }
+    public String getPhotoUrl() { return photoUrl; }
+    public String getUserId() { return userId; } // Getter nuevo
 }
