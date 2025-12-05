@@ -56,6 +56,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import android.content.SharedPreferences;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -153,12 +154,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        // Centrar mapa (tu código original)
         LatLng aguascalientes = new LatLng(21.8853, -102.2916);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(aguascalientes, 15));
 
+        // --- AQUÍ EMPIEZA EL DEBUG ---
+        Log.d("UBICACION", "📍 Iniciando configuración de mapa...");
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+
+            Log.d("UBICACION", "✅ Permiso de GPS concedido. Solicitando coordenadas...");
             mMap.setMyLocationEnabled(true);
+
+            com.google.android.gms.location.FusedLocationProviderClient fusedLocationClient =
+                    com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
+
+            fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    double lat = location.getLatitude();
+                    double lon = location.getLongitude();
+
+                    Log.d("UBICACION", "📡 ¡Coordenadas encontradas!: " + lat + ", " + lon);
+                    enviarUbicacionAlServer(lat, lon);
+                } else {
+                    // ESTE ES EL ERROR MÁS COMÚN EN EMULADORES
+                    Log.e("UBICACION", "⚠️ Location es NULL. (El emulador no tiene posición simulada)");
+                    Log.e("UBICACION", "👉 Ve a los 3 puntitos del emulador > Location > Set Location");
+                }
+            });
+        } else {
+            Log.e("UBICACION", "❌ NO hay permiso de ubicación. Solicitándolo...");
+            // Pedir permiso si no lo tiene
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 999);
         }
+
         cargarReportes();
     }
 
@@ -424,6 +454,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 currentUser = task.getResult(ApiException.class);
+                SharedPreferences prefs = getSharedPreferences("LostNetPrefs", MODE_PRIVATE);
+                prefs.edit().putString("email", currentUser.getEmail()).apply();
                 iniciarMapa();
             } catch (ApiException e) {
                 Log.w("Login", "signInResult:failed code=" + e.getStatusCode());
@@ -437,5 +469,42 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 imgPreviewRef.setImageURI(Uri.fromFile(photoFile));
             }
         }
+    }
+
+    private void enviarUbicacionAlServer(double lat, double lon) {
+
+        // 1. Recuperar el email guardado
+        SharedPreferences prefs = getSharedPreferences("LostNetPrefs", MODE_PRIVATE);
+        String emailUsuario = prefs.getString("email", null);
+
+        if (emailUsuario == null) {
+            Log.e("UBICACION", "❌ No hay email guardado. Inicia sesión de nuevo.");
+            return;
+        }
+
+        // 2. Preparar datos
+        UbicacionRequest datos = new UbicacionRequest(emailUsuario, lat, lon);
+
+        // 3. ¡USAR TU VARIABLE apiService EXISTENTE! (Aquí estaba el error)
+        if (apiService == null) {
+            Log.e("UBICACION", "❌ apiService no está inicializado");
+            return;
+        }
+
+        apiService.actualizarUbicacion(datos).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("UBICACION", "✅ Coordenadas enviadas: " + lat + ", " + lon);
+                } else {
+                    Log.e("UBICACION", "❌ Error server: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("UBICACION", "❌ Fallo de red: " + t.getMessage());
+            }
+        });
     }
 }
