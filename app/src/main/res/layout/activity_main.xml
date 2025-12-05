@@ -1,83 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:openDrawer="start">
 
-    <LinearLayout
-        android:id="@+id/layoutLogin"
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:background="#FFFFFF"
-        android:elevation="10dp"
-        android:clickable="true"
-        android:focusable="true">
+        android:layout_height="match_parent">
 
-        <com.google.android.gms.common.SignInButton
-            android:id="@+id/sign_in_button"
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:id="@+id/topBarContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="40dp"
+            android:paddingBottom="10dp"
+            android:paddingStart="16dp"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="10dp">
+
+                <ImageButton
+                    android:id="@+id/btnMenu"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@android:drawable/ic_menu_sort_by_size"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    app:tint="#333333"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="LostNet"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="#333333"
+                    android:layout_marginStart="16dp"/>
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chipGroupFiltros"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipTodos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Todos"
+                        android:checked="true"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipDocumentos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Documentos"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipElec"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Electrónica"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipOtros"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Otros"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
+
+                </com.google.android.material.chip.ChipGroup>
+            </HorizontalScrollView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layoutLogin"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF"
+            android:gravity="center"
+            android:visibility="gone"
+            android:elevation="20dp">
+            <com.google.android.gms.common.SignInButton
+                android:id="@+id/sign_in_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+            android:id="@+id/fabReportar"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:text="REPORTAR"
+            android:icon="@android:drawable/ic_input_add"
+            android:backgroundTint="#D32F2F"
+            android:textColor="#FFF"
+            app:iconTint="#FFF"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginBottom="32dp"/>
 
-    <fragment
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <ImageView
-        android:id="@+id/imgPinCentro"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:src="@android:drawable/ic_menu_myplaces"
-        app:tint="#D32F2F"
-        android:layout_centerInParent="true"
-        android:layout_marginBottom="20dp" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabNotificaciones"
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_popup_reminder"
-        android:backgroundTint="#FF9800"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_margin="16dp"
-        app:tint="#FFFFFF" />
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu" />
 
-    <Button
-        android:id="@+id/btnMisReportes"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Mis Reportes"
-        android:layout_alignParentTop="true"
-        android:layout_toStartOf="@id/btnCerrarSesion"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="8dp"/>
-
-    <Button
-        android:id="@+id/btnCerrarSesion"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Salir"
-        android:textSize="10sp"
-        android:backgroundTint="#555555"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginTop="40dp"
-        android:layout_marginEnd="16dp"/>
-
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fabReportar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="32dp"
-        android:text="REPORTAR AQUÍ"
-        android:backgroundTint="#D32F2F"
-        android:textColor="#FFF" />
-
-</RelativeLayout>
+</androidx.drawerlayout.widget.DrawerLayout>
