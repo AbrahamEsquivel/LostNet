@@ -83,6 +83,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private File photoFile;
     private ImageView imgPreviewRef;
 
+    // Pégalo al inicio de la clase MainActivity, antes del onCreate
+    private static final String BASE_URL = "http://10.155.13.137:5000/";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -219,7 +222,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 999);
         }
 
-        // Cargar los pines de reportes independientemente de mi ubicación
+        mMap.setOnMarkerClickListener(marker -> {
+            // Recuperamos el objeto oculto en el tag
+            Object tag = marker.getTag();
+
+            if (tag != null && tag instanceof ReporteModelo) {
+                ReporteModelo reporteSeleccionado = (ReporteModelo) tag;
+                mostrarPopUpDetalle(reporteSeleccionado); // Llamamos a la función del paso 3
+            }
+
+            return false; // false = permite que el mapa siga haciendo su zoom default al pin
+        });
+
         cargarReportes();
     }
 
@@ -262,7 +276,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             if (mostrar) {
                 LatLng pos = new LatLng(rep.getLatitude(), rep.getLongitude());
-                mMap.addMarker(new MarkerOptions().position(pos).title(rep.getDescription()));
+
+                // CREAMOS EL MARCADOR Y GUARDAMOS EL REPORTE ADENTRO
+                com.google.android.gms.maps.model.Marker marker = mMap.addMarker(
+                        new MarkerOptions().position(pos).title(rep.getDescription())
+                );
+
+                // ¡AQUÍ ESTÁ LA MAGIA! 🎩
+                marker.setTag(rep);
             }
         }
     }
@@ -557,5 +578,56 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onFailure(Call<Void> call, Throwable t) {}
         });
+    }
+
+    // Agrega este método en MainActivity
+    private void mostrarPopUpDetalle(ReporteModelo reporte) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_detalle_reporte, null);
+        builder.setView(view);
+
+        AlertDialog dialog = builder.create();
+
+        // 1. Vincular Vistas
+        ImageView img = view.findViewById(R.id.imgDetalle);
+        TextView txtCat = view.findViewById(R.id.txtDetalleCat);
+        TextView txtDesc = view.findViewById(R.id.txtDetalleDesc);
+        TextView txtEmail = view.findViewById(R.id.txtDetalleEmail);
+        TextView txtTel = view.findViewById(R.id.txtDetalleTel);
+        TextView txtPregunta = view.findViewById(R.id.txtDetallePregunta);
+        TextView txtRespuesta = view.findViewById(R.id.txtDetalleRespuesta);
+        Button btnCerrar = view.findViewById(R.id.btnCerrarDetalle);
+
+        // 2. Llenar Datos
+        txtDesc.setText(reporte.getDescription());
+        txtCat.setText(reporte.getCategory() != null ? reporte.getCategory() : "General");
+        txtEmail.setText(reporte.getEmail() != null ? reporte.getEmail() : "Sin Email"); // Asegúrate de tener getEmail en tu modelo
+        txtTel.setText("Tel: " + (reporte.getPhone() != null ? reporte.getPhone() : "N/A")); // Asegúrate de tener getPhone en tu modelo
+
+        txtPregunta.setText("P: " + (reporte.getSecurityQuestion() != null ? reporte.getSecurityQuestion() : "N/A"));
+        txtRespuesta.setText("R: " + (reporte.getSecurityAnswer() != null ? reporte.getSecurityAnswer() : "N/A"));
+
+        // 3. Cargar Imagen con Glide 📸
+        String rutaFoto = reporte.getPhotoUrl();
+        if (rutaFoto != null && !rutaFoto.isEmpty()) {
+            if(rutaFoto.startsWith("/")) rutaFoto = rutaFoto.substring(1);
+            String fullUrl = BASE_URL + rutaFoto; // BASE_URL debe ser visible aquí
+
+            com.bumptech.glide.Glide.with(this)
+                    .load(fullUrl)
+                    .placeholder(android.R.drawable.ic_menu_camera)
+                    .error(android.R.drawable.stat_notify_error)
+                    .into(img);
+        }
+
+        // 4. Botón Cerrar
+        btnCerrar.setOnClickListener(v -> dialog.dismiss());
+
+        // Opcional: Hacer fondo transparente para que se vean las esquinas redondeadas
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+        }
+
+        dialog.show();
     }
 }

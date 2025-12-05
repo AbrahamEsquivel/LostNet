@@ -25,6 +25,8 @@ public class ReporteModelo {
     private String userId;
 
     private String category;
+    private String email; // Asegúrate que el JSON trae este campo si lo quieres mostrar
+    private String phone; // Lo mismo con el teléfono
 
 
 
@@ -40,4 +42,6 @@ public class ReporteModelo {
     public String getPhotoUrl() { return photoUrl; }
     public String getUserId() { return userId; } // Getter nuevo
     public String getCategory() { return category; }
+    public String getEmail() { return email; }
+    public String getPhone() { return phone; }
 }
