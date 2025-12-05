@@ -46,6 +46,7 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
         // 1. Poner textos BÁSICOS
         holder.txtDesc.setText(reporte.getDescription());
         holder.txtStatus.setText("Estado: PERDIDO 🔴");
+        holder.txtCategoria.setText("📂 " + (reporte.getCategory() != null ? reporte.getCategory() : "Otros"));
 
         // 2. NUEVO: Mostrar Pregunta y Respuesta de Seguridad
         // (Asegúrate que tu ReporteModelo tenga getSecurityQuestion() y getSecurityAnswer())
@@ -91,6 +92,7 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
         TextView txtDesc, txtStatus, txtId;
         TextView txtPregunta, txtRespuesta; // <--- NUEVOS CAMPOS
         ImageView imgFoto;
+        TextView txtCategoria;
         Button btnEliminar;
 
         public ViewHolder(@NonNull View itemView) {
@@ -104,6 +106,7 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
             // Vinculamos los nuevos TextViews del XML
             txtPregunta = itemView.findViewById(R.id.txtPregunta);
             txtRespuesta = itemView.findViewById(R.id.txtRespuesta);
+            txtCategoria = itemView.findViewById(R.id.txtCategoria);
         }
     }
 }

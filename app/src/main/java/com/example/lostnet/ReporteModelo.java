@@ -24,6 +24,8 @@ public class ReporteModelo {
     @SerializedName("user_id")
     private String userId;
 
+    private String category;
+
 
 
     // Getters
@@ -37,4 +39,5 @@ public class ReporteModelo {
     public String getSecurityAnswer() { return securityAnswer; }
     public String getPhotoUrl() { return photoUrl; }
     public String getUserId() { return userId; } // Getter nuevo
+    public String getCategory() { return category; }
 }

@@ -118,8 +118,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         chipGroup.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.chipDocumentos) filtrarMapa("Documentos");
             else if (checkedId == R.id.chipElec) filtrarMapa("Electrónica");
+            else if (checkedId == R.id.chipRopa) filtrarMapa("Ropa"); // <--- ¡YA FUNCIONA!
             else if (checkedId == R.id.chipOtros) filtrarMapa("Otros");
-            else filtrarMapa("Todos"); // Por defecto
+            else filtrarMapa("Todos");
         });
 
         // 6. Configurar Botón Reportar (FAB)
@@ -240,29 +241,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    private void filtrarMapa(String categoria) {
+    private void filtrarMapa(String categoriaFiltro) {
         if (mMap == null) return;
-        mMap.clear(); // Limpiar pines actuales
+        mMap.clear();
 
         for (ReporteModelo rep : listaReportesOriginal) {
-            // Lógica de filtro:
-            // Si seleccionas "Todos", pasa.
-            // Si seleccionas otra cosa, verifica si la descripción o categoría contiene el texto.
-            // (Idealmente tu backend debería mandar un campo "category", pero por ahora filtramos por texto)
+            // Obtenemos la categoría del reporte (si es nula, asumimos "Otros")
+            String catReporte = rep.getCategory() != null ? rep.getCategory() : "Otros";
 
-            boolean coincide = categoria.equals("Todos");
+            boolean mostrar = false;
 
-            // Si no es todos, buscamos coincidencia simple en la descripción (o usa getCategory si lo tienes)
-            if (!coincide) {
-                // Truco: Si la descripción contiene la palabra clave, lo mostramos
-                if (rep.getDescription() != null && rep.getDescription().toLowerCase().contains(categoria.toLowerCase())) {
-                    coincide = true;
-                }
-                // Si tu modelo tiene getCategory(), descomenta esto:
-                // if (rep.getCategory() != null && rep.getCategory().equalsIgnoreCase(categoria)) coincide = true;
+            // Si el filtro es "Todos", mostramos todo
+            if (categoriaFiltro.equals("Todos")) {
+                mostrar = true;
+            }
+            // Si no, comparamos textos (ignorando mayúsculas/minúsculas)
+            else if (catReporte.equalsIgnoreCase(categoriaFiltro)) {
+                mostrar = true;
             }
 
-            if (coincide) {
+            if (mostrar) {
                 LatLng pos = new LatLng(rep.getLatitude(), rep.getLongitude());
                 mMap.addMarker(new MarkerOptions().position(pos).title(rep.getDescription()));
             }
