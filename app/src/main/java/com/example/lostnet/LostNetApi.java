@@ -48,4 +48,7 @@ public interface LostNetApi {
     Call<ResponseBody> borrarReporte(@Path("id") String id);
     @POST("/actualizar-ubicacion")
     Call<Void> actualizarUbicacion(@Body UbicacionRequest request);
+
+    @GET("/mis-alertas")
+    Call<List<AlertaModelo>> obtenerAlertas(@Query("email") String email);
 }
