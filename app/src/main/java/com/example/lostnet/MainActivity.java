@@ -60,6 +60,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -260,29 +261,42 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.clear();
 
         for (ReporteModelo rep : listaReportesOriginal) {
-            // Obtenemos la categoría del reporte (si es nula, asumimos "Otros")
             String catReporte = rep.getCategory() != null ? rep.getCategory() : "Otros";
-
             boolean mostrar = false;
 
-            // Si el filtro es "Todos", mostramos todo
+            // 1. Lógica de Filtro
             if (categoriaFiltro.equals("Todos")) {
                 mostrar = true;
-            }
-            // Si no, comparamos textos (ignorando mayúsculas/minúsculas)
-            else if (catReporte.equalsIgnoreCase(categoriaFiltro)) {
+            } else if (catReporte.equalsIgnoreCase(categoriaFiltro)) {
                 mostrar = true;
             }
 
             if (mostrar) {
                 LatLng pos = new LatLng(rep.getLatitude(), rep.getLongitude());
 
-                // CREAMOS EL MARCADOR Y GUARDAMOS EL REPORTE ADENTRO
+                // 2. Lógica de Colores (AQUÍ ESTÁ EL CAMBIO) 🎨
+                float colorPin;
+
+                // Verificamos si soy el dueño (currentUser vs rep.getUserId)
+                if (currentUser != null && rep.getUserId() != null &&
+                        rep.getUserId().equals(currentUser.getId())) {
+
+                    // ES MÍO -> AZUL 🔵
+                    colorPin = BitmapDescriptorFactory.HUE_AZURE;
+                } else {
+                    // ES DE OTRO -> ROJO 🔴
+                    colorPin = BitmapDescriptorFactory.HUE_RED;
+                }
+
+                // 3. Crear Pin con Color y Datos
                 com.google.android.gms.maps.model.Marker marker = mMap.addMarker(
-                        new MarkerOptions().position(pos).title(rep.getDescription())
+                        new MarkerOptions()
+                                .position(pos)
+                                .title(rep.getDescription())
+                                .icon(BitmapDescriptorFactory.defaultMarker(colorPin)) // Asignamos el color
                 );
 
-                // ¡AQUÍ ESTÁ LA MAGIA! 🎩
+                // Guardamos el objeto para el Pop-Up
                 marker.setTag(rep);
             }
         }
