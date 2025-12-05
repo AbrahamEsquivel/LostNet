@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 // El resto sigue igual...
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
+
                 .client(okHttpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();

@@ -69,4 +69,6 @@ dependencies {
 
         // Glide (Opcional, para cargar imágenes de reportes)
         implementation ("com.github.bumptech.glide:glide:4.15.1")
+        // Librería para cargar imágenes (Glide)
+        implementation("com.github.bumptech.glide:glide:4.16.0")
 }

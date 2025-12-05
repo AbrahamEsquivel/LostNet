@@ -11,6 +11,10 @@ public class ReporteModelo {
     private double latitude;
     @SerializedName("lon")
     private double longitude;
+    @SerializedName("security_question")
+    private String securityQuestion;
+    @SerializedName("security_answer")
+    private String securityAnswer;
     @SerializedName("status")
     private String status;
     @SerializedName("photo_url")
@@ -20,11 +24,17 @@ public class ReporteModelo {
     @SerializedName("user_id")
     private String userId;
 
+
+
     // Getters
     public String getId() { return id; }
     public double getLatitude() { return latitude; }
     public double getLongitude() { return longitude; }
+
     public String getDescription() { return description; }
+
+    public String getSecurityQuestion() { return securityQuestion; }
+    public String getSecurityAnswer() { return securityAnswer; }
     public String getPhotoUrl() { return photoUrl; }
     public String getUserId() { return userId; } // Getter nuevo
 }
