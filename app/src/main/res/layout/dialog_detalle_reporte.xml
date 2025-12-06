@@ -104,6 +104,16 @@
                     android:textColor="#757575"/>
 
                 <Button
+                    android:id="@+id/btnEliminarDetalle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ELIMINAR REPORTE"
+                    android:backgroundTint="#D32F2F"
+                    android:textColor="#FFFFFF"
+                    android:visibility="gone"
+                    android:layout_marginBottom="8dp"/>
+
+                <Button
                     android:id="@+id/btnCerrarDetalle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

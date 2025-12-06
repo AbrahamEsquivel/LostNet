@@ -17,14 +17,17 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 
+
 public interface LostNetApi {
 
     @GET("/reportes")
     Call<List<ReporteModelo>> obtenerReportes();
-
+    @GET("/puntos-seguros")
+    Call<List<PuntoSeguroModelo>> obtenerPuntosSeguros();
     // --- AGREGA ESTA LÍNEA DE @Headers ---
     // Esto le dice al servidor: "No mantengas la conexión viva, ciérrala al terminar".
     // Soluciona el "unexpected end of stream".
+
     @Headers("Connection: close")
     @Multipart
     @POST("/reportar")

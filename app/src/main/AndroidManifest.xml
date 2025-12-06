@@ -52,6 +52,8 @@
 
         <activity android:name=".MisReportesActivity" />
         <activity android:name=".NotificacionesActivity" />
+        <activity android:name=".CreditsActivity" />
+        <activity android:name=".AboutActivity" />
 
     </application>
 

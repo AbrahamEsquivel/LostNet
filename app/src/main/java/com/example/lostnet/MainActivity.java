@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // Datos y Filtros
     private List<ReporteModelo> listaReportesOriginal = new ArrayList<>(); // Copia para filtrar localmente
+    private List<PuntoSeguroModelo> listaPuntosSeguros = new ArrayList<>();
 
     // Variables de Reporte (Cámara)
     private File photoFile;
@@ -112,6 +113,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(new Intent(MainActivity.this, NotificacionesActivity.class));
             } else if (id == R.id.nav_logout) {
                 cerrarSesion();
+            } else if (id == R.id.nav_credits) {
+            startActivity(new Intent(MainActivity.this, CreditsActivity.class)); // <--- AQUÍ
+            } else if (id == R.id.nav_about) {
+            startActivity(new Intent(MainActivity.this, AboutActivity.class));   // <--- AQUÍ
             }
             drawerLayout.closeDrawer(GravityCompat.START);
             return true;
@@ -236,6 +241,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         cargarReportes();
+        cargarPuntosSeguros();
     }
 
     private void cargarReportes() {
@@ -258,13 +264,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void filtrarMapa(String categoriaFiltro) {
         if (mMap == null) return;
+
+        // 1. Borramos TODO (Rojos, Azules y Verdes)
         mMap.clear();
 
+        // 2. ¡RESTAURAMOS LOS VERDES INMEDIATAMENTE! (La solución)
+        pintarPuntosSegurosEnMapa();
+
+        // 3. Ahora sí, pintamos los reportes según el filtro (Rojos y Azules)
         for (ReporteModelo rep : listaReportesOriginal) {
             String catReporte = rep.getCategory() != null ? rep.getCategory() : "Otros";
             boolean mostrar = false;
 
-            // 1. Lógica de Filtro
             if (categoriaFiltro.equals("Todos")) {
                 mostrar = true;
             } else if (catReporte.equalsIgnoreCase(categoriaFiltro)) {
@@ -274,29 +285,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (mostrar) {
                 LatLng pos = new LatLng(rep.getLatitude(), rep.getLongitude());
 
-                // 2. Lógica de Colores (AQUÍ ESTÁ EL CAMBIO) 🎨
                 float colorPin;
-
-                // Verificamos si soy el dueño (currentUser vs rep.getUserId)
                 if (currentUser != null && rep.getUserId() != null &&
                         rep.getUserId().equals(currentUser.getId())) {
-
-                    // ES MÍO -> AZUL 🔵
-                    colorPin = BitmapDescriptorFactory.HUE_AZURE;
+                    colorPin = BitmapDescriptorFactory.HUE_AZURE; // Míos
                 } else {
-                    // ES DE OTRO -> ROJO 🔴
-                    colorPin = BitmapDescriptorFactory.HUE_RED;
+                    colorPin = BitmapDescriptorFactory.HUE_RED; // Otros
                 }
 
-                // 3. Crear Pin con Color y Datos
                 com.google.android.gms.maps.model.Marker marker = mMap.addMarker(
                         new MarkerOptions()
                                 .position(pos)
                                 .title(rep.getDescription())
-                                .icon(BitmapDescriptorFactory.defaultMarker(colorPin)) // Asignamos el color
+                                .icon(BitmapDescriptorFactory.defaultMarker(colorPin))
                 );
-
-                // Guardamos el objeto para el Pop-Up
                 marker.setTag(rep);
             }
         }
@@ -611,12 +613,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         TextView txtPregunta = view.findViewById(R.id.txtDetallePregunta);
         TextView txtRespuesta = view.findViewById(R.id.txtDetalleRespuesta);
         Button btnCerrar = view.findViewById(R.id.btnCerrarDetalle);
+        Button btnEliminar = view.findViewById(R.id.btnEliminarDetalle);
 
-        // 2. Llenar Datos
+        // 2. Llenar Datos (Manejo de nulos para que no truene)
         txtDesc.setText(reporte.getDescription());
         txtCat.setText(reporte.getCategory() != null ? reporte.getCategory() : "General");
-        txtEmail.setText(reporte.getEmail() != null ? reporte.getEmail() : "Sin Email"); // Asegúrate de tener getEmail en tu modelo
-        txtTel.setText("Tel: " + (reporte.getPhone() != null ? reporte.getPhone() : "N/A")); // Asegúrate de tener getPhone en tu modelo
+        txtEmail.setText(reporte.getEmail() != null ? reporte.getEmail() : "Sin Email");
+        txtTel.setText("Tel: " + (reporte.getPhone() != null ? reporte.getPhone() : "N/A"));
 
         txtPregunta.setText("P: " + (reporte.getSecurityQuestion() != null ? reporte.getSecurityQuestion() : "N/A"));
         txtRespuesta.setText("R: " + (reporte.getSecurityAnswer() != null ? reporte.getSecurityAnswer() : "N/A"));
@@ -625,7 +628,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String rutaFoto = reporte.getPhotoUrl();
         if (rutaFoto != null && !rutaFoto.isEmpty()) {
             if(rutaFoto.startsWith("/")) rutaFoto = rutaFoto.substring(1);
-            String fullUrl = BASE_URL + rutaFoto; // BASE_URL debe ser visible aquí
+            String fullUrl = BASE_URL + rutaFoto;
 
             com.bumptech.glide.Glide.with(this)
                     .load(fullUrl)
@@ -634,14 +637,91 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .into(img);
         }
 
-        // 4. Botón Cerrar
+        // 4. LÓGICA DE ELIMINAR (Solo si es mío)
+        if (currentUser != null && reporte.getUserId() != null &&
+                reporte.getUserId().equals(currentUser.getId())) {
+
+            btnEliminar.setVisibility(View.VISIBLE); // Mostrar botón rojo
+
+            btnEliminar.setOnClickListener(v -> {
+                // Confirmación
+                new AlertDialog.Builder(this)
+                        .setTitle("¿Eliminar Reporte?")
+                        .setMessage("Esta acción no se puede deshacer.")
+                        .setPositiveButton("Sí, borrar", (d, w) -> {
+                            // Llamada a la API
+                            apiService.borrarReporte(reporte.getId()).enqueue(new Callback<ResponseBody>() {
+                                @Override
+                                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) { // 👈 Y aquí
+                                    if (response.isSuccessful()) {
+                                        Toast.makeText(MainActivity.this, "Reporte eliminado", Toast.LENGTH_SHORT).show();
+                                        dialog.dismiss();
+                                        cargarReportes();
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "Error al eliminar", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<ResponseBody> call, Throwable t) { // 👈 Y aquí
+                                    Toast.makeText(MainActivity.this, "Error de red al borrar", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        })
+                        .setNegativeButton("Cancelar", null)
+                        .show();
+            });
+        } else {
+            btnEliminar.setVisibility(View.GONE); // Ocultar si no es mío
+        }
+
+        // 5. Botón Cerrar
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
-        // Opcional: Hacer fondo transparente para que se vean las esquinas redondeadas
+        // 6. HACER FONDO TRANSPARENTE (Importante para esquinas redondeadas)
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
 
         dialog.show();
+    }
+
+
+    private void cargarPuntosSeguros() {
+        if (apiService == null) return;
+
+        apiService.obtenerPuntosSeguros().enqueue(new Callback<List<PuntoSeguroModelo>>() {
+            @Override
+            public void onResponse(Call<List<PuntoSeguroModelo>> call, Response<List<PuntoSeguroModelo>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+
+                    // 1. Guardamos la lista en memoria para usarla después
+                    listaPuntosSeguros = response.body();
+
+                    // 2. Los pintamos por primera vez
+                    pintarPuntosSegurosEnMapa();
+                }
+            }
+            @Override
+            public void onFailure(Call<List<PuntoSeguroModelo>> call, Throwable t) {
+                Log.e("MAPA", "❌ Error cargando puntos seguros");
+            }
+        });
+    }
+
+    // --- METODO AUXILIAR NUEVO ---
+    // Este metodo se encargará de poner los pines verdes.
+    // Lo separamos para poder llamarlo cuantas veces queramos.
+    private void pintarPuntosSegurosEnMapa() {
+        if (mMap == null || listaPuntosSeguros == null) return;
+
+        for (PuntoSeguroModelo punto : listaPuntosSeguros) {
+            LatLng pos = new LatLng(punto.getLat(), punto.getLon());
+            mMap.addMarker(new MarkerOptions()
+                    .position(pos)
+                    .title("Zona Segura: " + punto.getNombre())
+                    .snippet(punto.getTipo())
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))); // VERDE
+        }
     }
 }
