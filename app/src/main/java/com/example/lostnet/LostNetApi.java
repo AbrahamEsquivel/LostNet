@@ -16,6 +16,7 @@ import retrofit2.http.Query;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
+import java.util.HashMap;
 
 
 public interface LostNetApi {
@@ -27,7 +28,10 @@ public interface LostNetApi {
     // --- AGREGA ESTA LÍNEA DE @Headers ---
     // Esto le dice al servidor: "No mantengas la conexión viva, ciérrala al terminar".
     // Soluciona el "unexpected end of stream".
-
+    @GET("/comentarios")
+    Call<List<ComentarioModelo>> obtenerComentarios(@Query("report_id") String reportId);
+    @POST("/comentar")
+    Call<Void> enviarComentario(@Body HashMap<String, Object> body);
     @Headers("Connection: close")
     @Multipart
     @POST("/reportar")

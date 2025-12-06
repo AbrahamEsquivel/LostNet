@@ -692,11 +692,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         TextView txtTel = view.findViewById(R.id.txtDetalleTel);
         TextView txtPregunta = view.findViewById(R.id.txtDetallePregunta);
         TextView txtRespuesta = view.findViewById(R.id.txtDetalleRespuesta);
-        Button btnCerrar = view.findViewById(R.id.btnCerrarDetalle);
-        Button btnWhats = view.findViewById(R.id.btnContactarWhats);    // Botón Verde
-        Button btnEliminar = view.findViewById(R.id.btnEliminarDetalle);// Botón Rojo
 
-        // --- B. LLENAR DATOS ---
+        // Botones de acción
+        Button btnCerrar = view.findViewById(R.id.btnCerrarDetalle);
+        Button btnWhats = view.findViewById(R.id.btnContactarWhats);
+        Button btnEliminar = view.findViewById(R.id.btnEliminarDetalle);
+
+        // Sección de Comentarios
+        androidx.recyclerview.widget.RecyclerView recyclerComents = view.findViewById(R.id.recyclerComentarios);
+        EditText etComentario = view.findViewById(R.id.etNuevoComentario);
+        android.widget.ImageButton btnEnviarCom = view.findViewById(R.id.btnEnviarComentario);
+
+        // --- B. LLENAR DATOS BÁSICOS ---
         txtDesc.setText(reporte.getDescription());
         txtCat.setText(reporte.getCategory() != null ? reporte.getCategory() : "General");
         txtEmail.setText(reporte.getEmail() != null ? reporte.getEmail() : "Sin Email");
@@ -718,12 +725,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .into(img);
         }
 
-        // --- D. LÓGICA INTELIGENTE (TUYO vs OTROS) ---
+        // --- D. LÓGICA TUYO vs OTROS (Eliminar vs WhatsApp) ---
         boolean esMio = currentUser != null && reporte.getUserId() != null &&
                 reporte.getUserId().equals(currentUser.getId());
 
         if (esMio) {
-            // CASO 1: ES MÍO -> Muestro BORRAR, Oculto WHATSAPP
             btnEliminar.setVisibility(View.VISIBLE);
             btnWhats.setVisibility(View.GONE);
 
@@ -738,12 +744,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     if (response.isSuccessful()) {
                                         Toast.makeText(MainActivity.this, "Reporte eliminado", Toast.LENGTH_SHORT).show();
                                         dialog.dismiss();
-                                        cargarReportes(); // Actualiza el mapa
+                                        cargarReportes();
                                     } else {
                                         Toast.makeText(MainActivity.this, "Error al eliminar", Toast.LENGTH_SHORT).show();
                                     }
                                 }
-
                                 @Override
                                 public void onFailure(Call<ResponseBody> call, Throwable t) {
                                     Toast.makeText(MainActivity.this, "Error de red", Toast.LENGTH_SHORT).show();
@@ -755,26 +760,70 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
 
         } else {
-            // CASO 2: ES DE OTRO -> Oculto BORRAR, Muestro WHATSAPP
             btnEliminar.setVisibility(View.GONE);
             btnWhats.setVisibility(View.VISIBLE);
 
             btnWhats.setOnClickListener(v -> {
                 String telefono = reporte.getPhone();
                 String nombreObjeto = reporte.getDescription();
-
                 if (telefono != null && !telefono.isEmpty()) {
                     abrirWhatsApp(telefono, nombreObjeto);
                 } else {
-                    Toast.makeText(MainActivity.this, "Este usuario no dejó teléfono", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Sin teléfono disponible", Toast.LENGTH_SHORT).show();
                 }
             });
         }
 
-        // --- E. CERRAR ---
+        // --- E. LÓGICA DE COMENTARIOS (EL MURO) ---
+        recyclerComents.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+
+        // Función para recargar la lista
+        Runnable cargarComentarios = () -> {
+            apiService.obtenerComentarios(reporte.getId()).enqueue(new Callback<List<ComentarioModelo>>() {
+                @Override
+                public void onResponse(Call<List<ComentarioModelo>> call, Response<List<ComentarioModelo>> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        recyclerComents.setAdapter(new ComentariosAdapter(response.body()));
+                    }
+                }
+                @Override public void onFailure(Call<List<ComentarioModelo>> call, Throwable t) {}
+            });
+        };
+
+        // 1. Cargar comentarios al abrir
+        cargarComentarios.run();
+
+        // 2. Enviar nuevo comentario
+        btnEnviarCom.setOnClickListener(v -> {
+            String texto = etComentario.getText().toString().trim();
+            if (texto.isEmpty()) return;
+
+            java.util.HashMap<String, Object> body = new java.util.HashMap<>();
+            body.put("report_id", reporte.getId());
+            body.put("user_name", currentUser != null ? currentUser.getDisplayName() : "Anónimo");
+            body.put("text", texto);
+
+            btnEnviarCom.setEnabled(false); // Bloquear botón
+
+            apiService.enviarComentario(body).enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    etComentario.setText(""); // Limpiar caja
+                    btnEnviarCom.setEnabled(true);
+                    cargarComentarios.run(); // Refrescar lista
+                    Toast.makeText(MainActivity.this, "Comentario enviado", Toast.LENGTH_SHORT).show();
+                }
+                @Override public void onFailure(Call<Void> call, Throwable t) {
+                    btnEnviarCom.setEnabled(true);
+                    Toast.makeText(MainActivity.this, "Error enviando comentario", Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        // --- F. CERRAR ---
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
-        // --- F. ESTILO TRANSPARENTE ---
+        // --- G. FONDO TRANSPARENTE ---
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
