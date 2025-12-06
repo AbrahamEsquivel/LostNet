@@ -21,13 +21,14 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
     // Tu IP correcta del APP-SERVER
     private static final String BASE_URL = "http://10.155.13.137:5000";
 
-    public interface OnItemClickListener {
-        void onEliminarClick(String idReporte, int position);
-    }
-
     public ReportesAdapter(List<ReporteModelo> lista, OnItemClickListener listener) {
         this.lista = lista;
         this.listener = listener;
+    }
+
+    public interface OnItemClickListener {
+        void onEliminarClick(String idReporte, int position);
+        void onItemClick(ReporteModelo reporte); // <--- NUEVO: Clic en la tarjeta
     }
 
     @NonNull
@@ -80,6 +81,9 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
         // 5. Listener del botón
         holder.btnEliminar.setOnClickListener(v -> {
             listener.onEliminarClick(reporte.getId(), position);
+        });
+        holder.itemView.setOnClickListener(v -> {
+            listener.onItemClick(reporte);
         });
     }
 

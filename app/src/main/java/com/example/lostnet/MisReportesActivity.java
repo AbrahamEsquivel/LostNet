@@ -1,5 +1,6 @@
 package com.example.lostnet;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -65,23 +66,50 @@ public class MisReportesActivity extends AppCompatActivity {
     }
 
     private void cargarMisReportes() {
+        if (apiService == null) return;
+
         apiService.obtenerReportes().enqueue(new Callback<List<ReporteModelo>>() {
             @Override
             public void onResponse(Call<List<ReporteModelo>> call, Response<List<ReporteModelo>> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     misReportesList.clear();
 
-                    // Filtrado: Solo mostramos mis reportes
+                    // Filtrado: Solo mostramos mis reportes (ID coincidente)
                     for (ReporteModelo r : response.body()) {
-                        // Verificamos que user_id no sea nulo antes de comparar
                         if (r.getUserId() != null && r.getUserId().equals(myUserId)) {
                             misReportesList.add(r);
                         }
                     }
 
-                    adapter = new ReportesAdapter(misReportesList, (idReporte, position) -> {
-                        eliminarReporte(idReporte, position);
+                    // --- AQUÍ CONECTAMOS EL CLIC PARA IR AL MAPA ---
+                    adapter = new ReportesAdapter(misReportesList, new ReportesAdapter.OnItemClickListener() {
+
+                        // Acción 1: Botón Eliminar
+                        @Override
+                        public void onEliminarClick(String idReporte, int position) {
+                            eliminarReporte(idReporte, position);
+                        }
+
+                        // Acción 2: Clic en la tarjeta (Ir al mapa)
+                        @Override
+                        public void onItemClick(ReporteModelo reporte) {
+                            Intent intent = new Intent(MisReportesActivity.this, MainActivity.class);
+
+                            // Mandamos las coordenadas para que el mapa sepa a dónde volar
+                            intent.putExtra("LAT_DESTINO", reporte.getLatitude());
+                            intent.putExtra("LON_DESTINO", reporte.getLongitude());
+                            intent.putExtra("ID_DESTINO", reporte.getId());
+
+                            // Flags importantes:
+                            // CLEAR_TOP: Si MainActivity ya estaba abierta abajo, borra lo que esté encima.
+                            // SINGLE_TOP: Reutiliza la MainActivity existente en vez de crear una nueva.
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+                            startActivity(intent);
+                            finish(); // Opcional: Cierra la lista para ahorrar memoria
+                        }
                     });
+
                     recyclerView.setAdapter(adapter);
 
                     if (misReportesList.isEmpty()) {
@@ -94,8 +122,7 @@ public class MisReportesActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<ReporteModelo>> call, Throwable t) {
-                // Si sale error aquí, revisa que el servidor esté corriendo y la IP sea correcta
-                Toast.makeText(MisReportesActivity.this, "Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(MisReportesActivity.this, "Error de red: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }

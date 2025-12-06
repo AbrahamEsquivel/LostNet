@@ -147,8 +147,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 8. Verificar Sesión
         currentUser = GoogleSignIn.getLastSignedInAccount(this);
         actualizarUI(currentUser);
+
+        verificarNavegacionDesdeLista(getIntent());
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        verificarNavegacionDesdeLista(intent);
+    }
+
+    private void verificarNavegacionDesdeLista(Intent intent) {
+        if (intent != null && intent.hasExtra("LAT_DESTINO")) {
+            double lat = intent.getDoubleExtra("LAT_DESTINO", 0);
+            double lon = intent.getDoubleExtra("LON_DESTINO", 0);
+            String idDestino = intent.getStringExtra("ID_DESTINO");
+
+            // Esperar un poquito a que el mapa esté listo si venimos entrando
+            new android.os.Handler().postDelayed(() -> {
+                if (mMap != null) {
+                    LatLng pos = new LatLng(lat, lon);
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 18)); // Zoom muy cerca
+
+                    // Opcional: Mostrar Toast
+                    Toast.makeText(this, "Mostrando reporte seleccionado", Toast.LENGTH_SHORT).show();
+
+                    // Si quisieras abrir el PopUp automáticamente, tendrías que buscar el Marker
+                    // que tenga el tag con ese ID, pero con mover la cámara basta por ahora.
+                }
+            }, 1000); // 1 segundo de espera
+        }
+    }
     private void actualizarUI(GoogleSignInAccount account) {
         if (account != null) {
             // Usuario conectado: Ocultamos login, mostramos mapa
