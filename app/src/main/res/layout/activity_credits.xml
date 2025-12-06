@@ -13,9 +13,9 @@
         android:gravity="center_horizontal">
 
         <ImageView
-            android:layout_width="80dp"
+            android:layout_width="300dp"
             android:layout_height="80dp"
-            android:src="@android:drawable/ic_menu_myplaces"
+            android:src="@drawable/logo"
             app:tint="#1565C0"
             android:layout_marginBottom="16dp"/>
 

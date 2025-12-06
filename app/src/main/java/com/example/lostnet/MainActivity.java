@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private static final int RC_SIGN_IN = 9001;
     private static final int REQUEST_IMAGE_CAPTURE = 1;
-
+    private static final int REQUEST_GALLERY_SELECT = 2;
     private GoogleMap mMap;
     private GoogleSignInClient mGoogleSignInClient;
     private LostNetApi apiService;
@@ -353,6 +353,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         EditText etSecA = view.findViewById(R.id.etSecA);
         Button btnCamara = view.findViewById(R.id.btnCamara);
         Button btnEnviar = view.findViewById(R.id.btnEnviar);
+        Button btnGaleria = view.findViewById(R.id.btnGaleria);
         imgPreviewRef = view.findViewById(R.id.imgPreview);
 
         // Resetear foto temporal al abrir el dialog
@@ -366,6 +367,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Botón Cámara
         btnCamara.setOnClickListener(v -> despacharTomarFoto());
+
+        btnGaleria.setOnClickListener(v -> {
+            // Intent para abrir la galería solo para imágenes
+            Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            intent.setType("image/*"); // <--- ESTO FILTRA SOLO IMÁGENES
+            startActivityForResult(intent, REQUEST_GALLERY_SELECT);
+        });
 
         // Botón Enviar (Lógica corregida para Foto Opcional)
         btnEnviar.setOnClickListener(v -> {
@@ -604,11 +612,52 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         // Cámara (se queda igual)
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            if(imgPreviewRef != null && photoFile != null) {
-                imgPreviewRef.setVisibility(View.VISIBLE);
-                imgPreviewRef.setImageURI(Uri.fromFile(photoFile));
+        if (resultCode == RESULT_OK) {
+
+            // CASO 1: Vengo de la CÁMARA 📸
+            if (requestCode == REQUEST_IMAGE_CAPTURE) {
+                // photoFile ya estaba seteado antes de abrir la cámara, así que ya está listo.
+                mostrarPreviewFoto();
             }
+
+            // CASO 2: Vengo de la GALERÍA 🖼️
+            else if (requestCode == REQUEST_GALLERY_SELECT && data != null) {
+                Uri selectedImageUri = data.getData();
+                if (selectedImageUri != null) {
+                    try {
+                        // Convertimos la URI de galería a un Archivo físico que podamos enviar
+                        photoFile = crearArchivoDesdeUri(selectedImageUri);
+                        mostrarPreviewFoto();
+                    } catch (IOException e) {
+                        Toast.makeText(this, "Error al cargar imagen de galería", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        }
+    }
+
+    private File crearArchivoDesdeUri(Uri uri) throws IOException {
+        // Creamos un archivo temporal vacío donde guardaremos la copia
+        File destino = crearArchivoImagen(); // Reusamos tu función existente
+
+        // Abrimos el flujo de datos de la URI y lo copiamos al archivo destino
+        try (java.io.InputStream inputStream = getContentResolver().openInputStream(uri);
+             java.io.OutputStream outputStream = new java.io.FileOutputStream(destino)) {
+
+            byte[] buffer = new byte[4 * 1024]; // Buffer de 4KB
+            int read;
+            while ((read = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, read);
+            }
+            outputStream.flush();
+        }
+        return destino;
+    }
+
+    private void mostrarPreviewFoto() {
+        if(imgPreviewRef != null && photoFile != null) {
+            imgPreviewRef.setVisibility(View.VISIBLE);
+            imgPreviewRef.setImageURI(Uri.fromFile(photoFile));
         }
     }
 
