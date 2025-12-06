@@ -112,14 +112,24 @@
                     android:textColor="#FFFFFF"
                     android:visibility="gone"
                     android:layout_marginBottom="8dp"/>
-
+                <Button
+                    android:id="@+id/btnContactarWhats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="¡LO ENCONTRÉ! ENVIAR WHATSAPP"
+                    android:backgroundTint="#25D366"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    android:layout_marginBottom="8dp"
+                    android:drawableStart="@android:drawable/ic_dialog_email"
+                    android:padding="12dp"/>
                 <Button
                     android:id="@+id/btnCerrarDetalle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Cerrar"
                     android:layout_marginTop="20dp"/>
-
             </LinearLayout>
         </ScrollView>
     </LinearLayout>

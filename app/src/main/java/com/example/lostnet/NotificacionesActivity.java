@@ -1,5 +1,6 @@
 package com.example.lostnet;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -68,8 +69,25 @@ public class NotificacionesActivity extends AppCompatActivity {
                         Toast.makeText(NotificacionesActivity.this, "No tienes nuevas alertas", Toast.LENGTH_SHORT).show();
                     }
 
-                    // Llenar la lista
-                    adapter = new AlertasAdapter(alertas);
+                    // --- AQUÍ ESTÁ EL CAMBIO PARA REDIRECCIONAR ---
+                    adapter = new AlertasAdapter(alertas, new AlertasAdapter.OnAlertaClickListener() {
+                        @Override
+                        public void onAlertaClick(AlertaModelo alerta) {
+                            // 1. Preparamos el viaje al Mapa
+                            Intent intent = new Intent(NotificacionesActivity.this, MainActivity.class);
+
+                            // 2. Empacamos las coordenadas del objeto perdido
+                            intent.putExtra("LAT_DESTINO", alerta.getLatObjeto());
+                            intent.putExtra("LON_DESTINO", alerta.getLonObjeto());
+
+                            // 3. Flags para volver a la pantalla principal sin crear duplicados
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+                            startActivity(intent);
+                            finish(); // Cerramos notificaciones para que no estorbe
+                        }
+                    });
+
                     recycler.setAdapter(adapter);
                 }
             }

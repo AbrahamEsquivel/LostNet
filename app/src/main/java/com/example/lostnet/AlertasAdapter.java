@@ -14,6 +14,7 @@ import java.util.Locale;
 public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHolder> {
 
     private List<AlertaModelo> listaAlertas;
+    private OnAlertaClickListener listener;
 
     public AlertasAdapter(List<AlertaModelo> listaAlertas) {
         this.listaAlertas = listaAlertas;
@@ -30,6 +31,7 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AlertaModelo alerta = listaAlertas.get(position);
+        holder.txtMensaje.setText(alerta.getMessage());
 
         // 1. Asignar el mensaje principal
         holder.txtMensaje.setText(alerta.getMessage());
@@ -38,6 +40,9 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
         Date date = new Date(alerta.getTimestamp() * 1000L); // x1000 porque Python usa segundos y Java milisegundos
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
         holder.txtFecha.setText("Fecha: " + sdf.format(date));
+        holder.itemView.setOnClickListener(v -> {
+            listener.onAlertaClick(alerta);
+        });
     }
 
     @Override
@@ -54,5 +59,14 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
             txtMensaje = itemView.findViewById(R.id.txtMensajeAlerta);
             txtFecha = itemView.findViewById(R.id.txtFechaAlerta);
         }
+    }
+
+    public interface OnAlertaClickListener {
+        void onAlertaClick(AlertaModelo alerta);
+    }
+
+    public AlertasAdapter(List<AlertaModelo> listaAlertas, OnAlertaClickListener listener) {
+        this.listaAlertas = listaAlertas;
+        this.listener = listener;
     }
 }

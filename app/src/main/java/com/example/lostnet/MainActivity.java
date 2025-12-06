@@ -626,7 +626,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    // Agrega este método en MainActivity
+    // Agrega este metodo en MainActivity
+    // 1. MÉTODO PRINCIPAL DEL POPUP
     private void mostrarPopUpDetalle(ReporteModelo reporte) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_detalle_reporte, null);
@@ -634,7 +635,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         AlertDialog dialog = builder.create();
 
-        // 1. Vincular Vistas
+        // --- A. VINCULAR VISTAS ---
         ImageView img = view.findViewById(R.id.imgDetalle);
         TextView txtCat = view.findViewById(R.id.txtDetalleCat);
         TextView txtDesc = view.findViewById(R.id.txtDetalleDesc);
@@ -643,9 +644,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         TextView txtPregunta = view.findViewById(R.id.txtDetallePregunta);
         TextView txtRespuesta = view.findViewById(R.id.txtDetalleRespuesta);
         Button btnCerrar = view.findViewById(R.id.btnCerrarDetalle);
-        Button btnEliminar = view.findViewById(R.id.btnEliminarDetalle);
+        Button btnWhats = view.findViewById(R.id.btnContactarWhats);    // Botón Verde
+        Button btnEliminar = view.findViewById(R.id.btnEliminarDetalle);// Botón Rojo
 
-        // 2. Llenar Datos (Manejo de nulos para que no truene)
+        // --- B. LLENAR DATOS ---
         txtDesc.setText(reporte.getDescription());
         txtCat.setText(reporte.getCategory() != null ? reporte.getCategory() : "General");
         txtEmail.setText(reporte.getEmail() != null ? reporte.getEmail() : "Sin Email");
@@ -654,7 +656,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         txtPregunta.setText("P: " + (reporte.getSecurityQuestion() != null ? reporte.getSecurityQuestion() : "N/A"));
         txtRespuesta.setText("R: " + (reporte.getSecurityAnswer() != null ? reporte.getSecurityAnswer() : "N/A"));
 
-        // 3. Cargar Imagen con Glide 📸
+        // --- C. CARGAR FOTO ---
         String rutaFoto = reporte.getPhotoUrl();
         if (rutaFoto != null && !rutaFoto.isEmpty()) {
             if(rutaFoto.startsWith("/")) rutaFoto = rutaFoto.substring(1);
@@ -667,53 +669,93 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .into(img);
         }
 
-        // 4. LÓGICA DE ELIMINAR (Solo si es mío)
-        if (currentUser != null && reporte.getUserId() != null &&
-                reporte.getUserId().equals(currentUser.getId())) {
+        // --- D. LÓGICA INTELIGENTE (TUYO vs OTROS) ---
+        boolean esMio = currentUser != null && reporte.getUserId() != null &&
+                reporte.getUserId().equals(currentUser.getId());
 
-            btnEliminar.setVisibility(View.VISIBLE); // Mostrar botón rojo
+        if (esMio) {
+            // CASO 1: ES MÍO -> Muestro BORRAR, Oculto WHATSAPP
+            btnEliminar.setVisibility(View.VISIBLE);
+            btnWhats.setVisibility(View.GONE);
 
             btnEliminar.setOnClickListener(v -> {
-                // Confirmación
                 new AlertDialog.Builder(this)
                         .setTitle("¿Eliminar Reporte?")
                         .setMessage("Esta acción no se puede deshacer.")
                         .setPositiveButton("Sí, borrar", (d, w) -> {
-                            // Llamada a la API
                             apiService.borrarReporte(reporte.getId()).enqueue(new Callback<ResponseBody>() {
                                 @Override
-                                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) { // 👈 Y aquí
+                                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                                     if (response.isSuccessful()) {
                                         Toast.makeText(MainActivity.this, "Reporte eliminado", Toast.LENGTH_SHORT).show();
                                         dialog.dismiss();
-                                        cargarReportes();
+                                        cargarReportes(); // Actualiza el mapa
                                     } else {
                                         Toast.makeText(MainActivity.this, "Error al eliminar", Toast.LENGTH_SHORT).show();
                                     }
                                 }
 
                                 @Override
-                                public void onFailure(Call<ResponseBody> call, Throwable t) { // 👈 Y aquí
-                                    Toast.makeText(MainActivity.this, "Error de red al borrar", Toast.LENGTH_SHORT).show();
+                                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                    Toast.makeText(MainActivity.this, "Error de red", Toast.LENGTH_SHORT).show();
                                 }
                             });
                         })
                         .setNegativeButton("Cancelar", null)
                         .show();
             });
+
         } else {
-            btnEliminar.setVisibility(View.GONE); // Ocultar si no es mío
+            // CASO 2: ES DE OTRO -> Oculto BORRAR, Muestro WHATSAPP
+            btnEliminar.setVisibility(View.GONE);
+            btnWhats.setVisibility(View.VISIBLE);
+
+            btnWhats.setOnClickListener(v -> {
+                String telefono = reporte.getPhone();
+                String nombreObjeto = reporte.getDescription();
+
+                if (telefono != null && !telefono.isEmpty()) {
+                    abrirWhatsApp(telefono, nombreObjeto);
+                } else {
+                    Toast.makeText(MainActivity.this, "Este usuario no dejó teléfono", Toast.LENGTH_SHORT).show();
+                }
+            });
         }
 
-        // 5. Botón Cerrar
+        // --- E. CERRAR ---
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
-        // 6. HACER FONDO TRANSPARENTE (Importante para esquinas redondeadas)
+        // --- F. ESTILO TRANSPARENTE ---
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
 
         dialog.show();
+    }
+
+    // 2. MÉTODO AUXILIAR PARA ABRIR WHATSAPP
+    private void abrirWhatsApp(String telefono, String objeto) {
+        try {
+            // Limpieza básica del número
+            String numeroLimpio = telefono.replaceAll("\\s+", "").replaceAll("-", "");
+
+            // Asumimos lada 52 (México) si no la trae
+            if (!numeroLimpio.startsWith("+") && !numeroLimpio.startsWith("52")) {
+                numeroLimpio = "52" + numeroLimpio;
+            }
+            // WhatsApp API requiere solo números, sin el +
+            numeroLimpio = numeroLimpio.replace("+", "");
+
+            String mensaje = "Hola, vi en LostNet que perdiste tu *" + objeto + "*. ¡Creo que yo lo encontré! ¿Dónde nos vemos?";
+            String url = "https://api.whatsapp.com/send?phone=" + numeroLimpio + "&text=" + java.net.URLEncoder.encode(mensaje, "UTF-8");
+
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setData(Uri.parse(url));
+            startActivity(i);
+
+        } catch (Exception e) {
+            Toast.makeText(this, "Error al abrir WhatsApp (¿Está instalado?)", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
