@@ -91,6 +91,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
+                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        );
         setContentView(R.layout.activity_main); // Cargamos el nuevo diseño
 
         // 1. Inicializar Retrofit (Usando la clase helper que creamos antes)
@@ -149,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         // Botón Login (Dentro del layout blanco)
-        findViewById(R.id.sign_in_button).setOnClickListener(v -> signIn());
+        findViewById(R.id.btnCustomGoogleLogin).setOnClickListener(v -> signIn());
 
         // 8. Verificar Sesión
         currentUser = GoogleSignIn.getLastSignedInAccount(this);
@@ -710,14 +713,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         EditText etComentario = view.findViewById(R.id.etNuevoComentario);
         android.widget.ImageButton btnEnviarCom = view.findViewById(R.id.btnEnviarComentario);
 
-        // --- B. LLENAR DATOS BÁSICOS ---
+        // --- B. LLENAR DATOS BÁSICOS (Solo los públicos generales) ---
         txtDesc.setText(reporte.getDescription());
         txtCat.setText(reporte.getCategory() != null ? reporte.getCategory() : "General");
-        txtEmail.setText(reporte.getEmail() != null ? reporte.getEmail() : "Sin Email");
-        txtTel.setText("Tel: " + (reporte.getPhone() != null ? reporte.getPhone() : "N/A"));
 
+        // La pregunta la dejamos visible siempre
         txtPregunta.setText("P: " + (reporte.getSecurityQuestion() != null ? reporte.getSecurityQuestion() : "N/A"));
-        //txtRespuesta.setText("R: " + (reporte.getSecurityAnswer() != null ? reporte.getSecurityAnswer() : "N/A"));
 
         // --- C. CARGAR FOTO ---
         String rutaFoto = reporte.getPhotoUrl();
@@ -732,14 +733,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .into(img);
         }
 
-        // --- D. LÓGICA TUYO vs OTROS (Eliminar vs WhatsApp) ---
+        // --- D. LÓGICA DE PRIVACIDAD (TUYO vs OTROS) ---
         boolean esMio = currentUser != null && reporte.getUserId() != null &&
                 reporte.getUserId().equals(currentUser.getId());
 
         if (esMio) {
+            // CASO 1: ES TUYO 🟢 (Ves todo completo)
+            txtEmail.setText(reporte.getEmail() != null ? reporte.getEmail() : "Sin Email");
+            txtTel.setText("Tel: " + (reporte.getPhone() != null ? reporte.getPhone() : "N/A"));
+
+            // Respuesta visible
             txtRespuesta.setVisibility(View.VISIBLE);
             txtRespuesta.setText("R: " + (reporte.getSecurityAnswer() != null ? reporte.getSecurityAnswer() : "N/A"));
 
+            // Botones
             btnEliminar.setVisibility(View.VISIBLE);
             btnWhats.setVisibility(View.GONE);
 
@@ -770,15 +777,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
 
         } else {
+            // CASO 2: ES DE OTRO 🔴 (Censuramos datos sensibles)
+
+            // Usamos las funciones nuevas para ocultar info
+            txtEmail.setText(enmascararEmail(reporte.getEmail()));
+            txtTel.setText("Tel: " + enmascararTelefono(reporte.getPhone()));
+
+            // Ocultamos la respuesta secreta
             txtRespuesta.setVisibility(View.GONE);
+
+            // Botones
             btnEliminar.setVisibility(View.GONE);
             btnWhats.setVisibility(View.VISIBLE);
 
             btnWhats.setOnClickListener(v -> {
-                String telefono = reporte.getPhone();
+                String telefonoReal = reporte.getPhone(); // <--- Aquí usamos el REAL para que WhatsApp funcione
                 String nombreObjeto = reporte.getDescription();
-                if (telefono != null && !telefono.isEmpty()) {
-                    abrirWhatsApp(telefono, nombreObjeto);
+                if (telefonoReal != null && !telefonoReal.isEmpty()) {
+                    abrirWhatsApp(telefonoReal, nombreObjeto);
                 } else {
                     Toast.makeText(MainActivity.this, "Sin teléfono disponible", Toast.LENGTH_SHORT).show();
                 }
@@ -788,7 +804,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // --- E. LÓGICA DE COMENTARIOS (EL MURO) ---
         recyclerComents.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
 
-        // Función para recargar la lista
         Runnable cargarComentarios = () -> {
             apiService.obtenerComentarios(reporte.getId()).enqueue(new Callback<List<ComentarioModelo>>() {
                 @Override
@@ -801,10 +816,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
         };
 
-        // 1. Cargar comentarios al abrir
         cargarComentarios.run();
 
-        // 2. Enviar nuevo comentario
         btnEnviarCom.setOnClickListener(v -> {
             String texto = etComentario.getText().toString().trim();
             if (texto.isEmpty()) return;
@@ -814,14 +827,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             body.put("user_name", currentUser != null ? currentUser.getDisplayName() : "Anónimo");
             body.put("text", texto);
 
-            btnEnviarCom.setEnabled(false); // Bloquear botón
+            btnEnviarCom.setEnabled(false);
 
             apiService.enviarComentario(body).enqueue(new Callback<Void>() {
                 @Override
                 public void onResponse(Call<Void> call, Response<Void> response) {
-                    etComentario.setText(""); // Limpiar caja
+                    etComentario.setText("");
                     btnEnviarCom.setEnabled(true);
-                    cargarComentarios.run(); // Refrescar lista
+                    cargarComentarios.run();
                     Toast.makeText(MainActivity.this, "Comentario enviado", Toast.LENGTH_SHORT).show();
                 }
                 @Override public void onFailure(Call<Void> call, Throwable t) {
@@ -834,7 +847,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // --- F. CERRAR ---
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
-        // --- G. FONDO TRANSPARENTE ---
         if (dialog.getWindow() != null) {
             dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
@@ -904,5 +916,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .snippet(punto.getTipo())
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))); // VERDE
         }
+    }
+
+    private String enmascararEmail(String email) {
+        if (email == null || email.isEmpty()) return "Sin Email";
+        if (!email.contains("@")) return email; // Si no tiene arroba, no lo tocamos
+
+        String[] partes = email.split("@");
+        String nombre = partes[0];
+        String dominio = partes[1];
+
+        // Si el nombre es largo (ej. "josimar"), dejamos "jos***"
+        // Si es corto (ej. "yo"), dejamos "***"
+        if (nombre.length() > 3) {
+            return nombre.substring(0, 3) + "***@" + dominio;
+        } else {
+            return "***@" + dominio;
+        }
+    }
+
+    private String enmascararTelefono(String phone) {
+        if (phone == null || phone.isEmpty()) return "Sin Teléfono";
+        // Dejamos los primeros 2 dígitos y los últimos 2 visibles
+        if (phone.length() > 4) {
+            return phone.substring(0, 2) + "****" + phone.substring(phone.length() - 2);
+        }
+        return "****";
     }
 }
