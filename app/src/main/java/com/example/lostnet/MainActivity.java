@@ -104,6 +104,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 3. Configurar Botón Menú (Hamburguesa)
         findViewById(R.id.btnMenu).setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
 
+        findViewById(R.id.fabRefresh).setOnClickListener(v -> {
+            Toast.makeText(this, "🔄 Reiniciando...", Toast.LENGTH_SHORT).show();
+
+            // ESTA LÍNEA MÁGICA HACE EL "F5"
+            recreate();
+        });
+
         // 4. Configurar Menú Lateral (Navigation Drawer)
         navigationView.setNavigationItemSelectedListener(item -> {
             int id = item.getItemId();
@@ -710,7 +717,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         txtTel.setText("Tel: " + (reporte.getPhone() != null ? reporte.getPhone() : "N/A"));
 
         txtPregunta.setText("P: " + (reporte.getSecurityQuestion() != null ? reporte.getSecurityQuestion() : "N/A"));
-        txtRespuesta.setText("R: " + (reporte.getSecurityAnswer() != null ? reporte.getSecurityAnswer() : "N/A"));
+        //txtRespuesta.setText("R: " + (reporte.getSecurityAnswer() != null ? reporte.getSecurityAnswer() : "N/A"));
 
         // --- C. CARGAR FOTO ---
         String rutaFoto = reporte.getPhotoUrl();
@@ -730,6 +737,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 reporte.getUserId().equals(currentUser.getId());
 
         if (esMio) {
+            txtRespuesta.setVisibility(View.VISIBLE);
+            txtRespuesta.setText("R: " + (reporte.getSecurityAnswer() != null ? reporte.getSecurityAnswer() : "N/A"));
+
             btnEliminar.setVisibility(View.VISIBLE);
             btnWhats.setVisibility(View.GONE);
 
@@ -760,6 +770,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
 
         } else {
+            txtRespuesta.setVisibility(View.GONE);
             btnEliminar.setVisibility(View.GONE);
             btnWhats.setVisibility(View.VISIBLE);
 
