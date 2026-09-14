@@ -1,5 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Primary — Purple/Indigo (se mantiene el acento original) -->
+    <color name="primary">#6C63FF</color>
+    <color name="primary_dark">#4A43CC</color>
+    <color name="primary_light">#9B95FF</color>
+    <color name="primary_container">#EEF0FF</color>
+
+    <!-- Accent — Teal suave -->
+    <color name="accent">#00B894</color>
+    <color name="accent_dark">#00A884</color>
+    <color name="accent_container">#E0FAF6</color>
+
+    <!-- Danger / Error -->
+    <color name="danger">#FF4757</color>
+    <color name="danger_dark">#CC1F2E</color>
+    <color name="danger_container">#FFEAEC</color>
+
+    <!-- Warning -->
+    <color name="warning">#F39C12</color>
+    <color name="warning_container">#FEF9E7</color>
+
+    <!-- WhatsApp -->
+    <color name="whatsapp">#25D366</color>
+
+    <!-- Surfaces (Light Mode) -->
+    <color name="surface_dark">#F5F6FA</color>
+    <color name="surface_card">#FFFFFF</color>
+    <color name="surface_elevated">#FFFFFF</color>
+    <color name="surface_section">#F0F1F8</color>
+
+    <!-- Text -->
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#5A607A</color>
+    <color name="text_hint">#9AA0B8</color>
+
+    <!-- Dividers / Borders -->
+    <color name="divider">#E8EAEE</color>
+    <color name="border_subtle">#DDE1EC</color>
+
+    <!-- Map Legend -->
+    <color name="legend_mine">#6C63FF</color>
+    <color name="legend_others">#FF4757</color>
+    <color name="legend_safe">#00B894</color>
+
+    <!-- Gamification -->
+    <color name="gold">#F4C430</color>
+
+    <!-- Gradient helpers -->
+    <color name="grad_header_start">#6C63FF</color>
+    <color name="grad_header_end">#9B95FF</color>
 </resources>

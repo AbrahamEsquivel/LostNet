@@ -4,20 +4,31 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Adaptador para mostrar la lista de alertas de proximidad en un RecyclerView.
+ */
 public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHolder> {
 
-    private List<AlertaModelo> listaAlertas;
-    private OnAlertaClickListener listener;
+    /** Callback para manejar el clic en una alerta. */
+    public interface OnAlertaClickListener {
+        void onAlertaClick(AlertaModelo alerta);
+    }
 
-    public AlertasAdapter(List<AlertaModelo> listaAlertas) {
+    private final List<AlertaModelo> listaAlertas;
+    private final OnAlertaClickListener listener;
+
+    public AlertasAdapter(List<AlertaModelo> listaAlertas, OnAlertaClickListener listener) {
         this.listaAlertas = listaAlertas;
+        this.listener     = listener;
     }
 
     @NonNull
@@ -31,18 +42,15 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         AlertaModelo alerta = listaAlertas.get(position);
+
         holder.txtMensaje.setText(alerta.getMessage());
 
-        // 1. Asignar el mensaje principal
-        holder.txtMensaje.setText(alerta.getMessage());
+        // El servidor devuelve timestamp en segundos; Java usa milisegundos.
+        Date fecha = new Date(alerta.getTimestamp() * 1000L);
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+        holder.txtFecha.setText("Fecha: " + formato.format(fecha));
 
-        // 2. Convertir el timestamp (números) a fecha legible
-        Date date = new Date(alerta.getTimestamp() * 1000L); // x1000 porque Python usa segundos y Java milisegundos
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-        holder.txtFecha.setText("Fecha: " + sdf.format(date));
-        holder.itemView.setOnClickListener(v -> {
-            listener.onAlertaClick(alerta);
-        });
+        holder.itemView.setOnClickListener(v -> listener.onAlertaClick(alerta));
     }
 
     @Override
@@ -50,23 +58,14 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
         return listaAlertas.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txtMensaje, txtFecha;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        final TextView txtMensaje;
+        final TextView txtFecha;
 
-        public ViewHolder(@NonNull View itemView) {
+        ViewHolder(@NonNull View itemView) {
             super(itemView);
-            // Estos IDs deben coincidir con tu item_alerta.xml
             txtMensaje = itemView.findViewById(R.id.txtMensajeAlerta);
-            txtFecha = itemView.findViewById(R.id.txtFechaAlerta);
+            txtFecha   = itemView.findViewById(R.id.txtFechaAlerta);
         }
-    }
-
-    public interface OnAlertaClickListener {
-        void onAlertaClick(AlertaModelo alerta);
-    }
-
-    public AlertasAdapter(List<AlertaModelo> listaAlertas, OnAlertaClickListener listener) {
-        this.listaAlertas = listaAlertas;
-        this.listener = listener;
     }
 }

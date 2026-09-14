@@ -3,22 +3,24 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="8dp">
+    app:cardCornerRadius="24dp"
+    app:cardElevation="10dp"
+    app:cardBackgroundColor="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#FFFFFF">
+        android:background="@color/white">
 
+        <!-- Hero image -->
         <ImageView
             android:id="@+id/imgDetalle"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
+            android:layout_height="240dp"
             android:scaleType="centerCrop"
             android:src="@android:drawable/ic_menu_gallery"
-            android:background="#EEEEEE"/>
+            android:background="@color/surface_section"/>
 
         <ScrollView
             android:layout_width="match_parent"
@@ -28,48 +30,57 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="20dp">
+                android:padding="22dp">
 
+                <!-- Categoría badge (pill) -->
                 <TextView
                     android:id="@+id/txtDetalleCat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Electrónica"
-                    android:textColor="#1565C0"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="4dp"
-                    android:textSize="12sp"
+                    android:background="@drawable/bg_tag_pill"
+                    android:textColor="@color/primary"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="5dp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginBottom="10dp"/>
+
+                <!-- Título -->
                 <TextView
                     android:id="@+id/txtDetalleDesc"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Nombre del Objeto"
-                    android:textSize="22sp"
+                    android:textSize="24sp"
                     android:textStyle="bold"
-                    android:textColor="#000000"
-                    android:layout_marginBottom="16dp"/>
+                    android:textColor="@color/text_primary"
+                    android:layout_marginBottom="18dp"/>
 
+                <!-- Card contacto -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="#F5F5F5"
-                    android:padding="12dp"
+                    android:background="@drawable/bg_input_dark"
+                    android:padding="16dp"
                     android:layout_marginBottom="16dp">
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="👤 Contacto:"
-                        android:textStyle="bold"/>
+                        android:text="👤  Contacto"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="6dp"/>
 
                     <TextView
                         android:id="@+id/txtDetalleEmail"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="usuario@email.com"
+                        android:textColor="@color/text_primary"
                         android:layout_marginBottom="4dp"/>
 
                     <TextView
@@ -77,83 +88,114 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Tel: 449-XXX-XXXX"
-                        android:textColor="#333333"/>
+                        android:textColor="@color/text_secondary"/>
                 </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- Seguridad -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="🔒 Pregunta de Seguridad:"
-                    android:textStyle="bold"
-                    android:layout_marginTop="8dp"/>
-                <TextView
-                    android:id="@+id/txtDetallePregunta"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="¿Color?"
-                    android:textColor="#555555"
-                    android:layout_marginBottom="4dp"/>
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_input_dark"
+                    android:padding="16dp"
+                    android:layout_marginBottom="20dp">
 
-                <TextView
-                    android:id="@+id/txtDetalleRespuesta"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Respuesta: ***"
-                    android:textStyle="italic"
-                    android:textSize="12sp"
-                    android:textColor="#757575"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔒  Pregunta de Seguridad"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary"
+                        android:textSize="12sp"
+                        android:layout_marginBottom="6dp"/>
 
+                    <TextView
+                        android:id="@+id/txtDetallePregunta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="¿Color?"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="4dp"/>
+
+                    <TextView
+                        android:id="@+id/txtDetalleRespuesta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Respuesta: ***"
+                        android:textStyle="italic"
+                        android:textSize="12sp"
+                        android:textColor="@color/text_hint"/>
+                </LinearLayout>
+
+                <!-- Botón eliminar -->
                 <Button
                     android:id="@+id/btnEliminarDetalle"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="50dp"
                     android:text="ELIMINAR REPORTE"
-                    android:backgroundTint="#D32F2F"
+                    android:background="@drawable/bg_button_danger"
                     android:textColor="#FFFFFF"
+                    android:textStyle="bold"
                     android:visibility="gone"
-                    android:layout_marginBottom="8dp"/>
+                    android:layout_marginBottom="10dp"/>
+
+                <!-- Botón WhatsApp -->
                 <Button
                     android:id="@+id/btnContactarWhats"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="54dp"
                     android:text="¡LO ENCONTRÉ! ENVIAR WHATSAPP"
-                    android:backgroundTint="#25D366"
+                    android:background="@drawable/bg_button_whatsapp"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
+                    android:textSize="13sp"
                     android:visibility="gone"
-                    android:layout_marginBottom="8dp"
-                    android:drawableStart="@android:drawable/ic_dialog_email"
-                    android:padding="12dp"/>
+                    android:layout_marginBottom="10dp"/>
+
+                <!-- Botón cerrar -->
                 <Button
                     android:id="@+id/btnCerrarDetalle"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:text="Cerrar"
-                    android:layout_marginTop="20dp"/>
+                    android:textColor="@color/text_secondary"
+                    app:strokeColor="@color/border_subtle"
+                    app:cornerRadius="24dp"
+                    android:layout_marginTop="4dp"/>
+
+                <!-- Separador -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="#CCCCCC"
-                    android:layout_marginVertical="16dp"/>
+                    android:background="@color/divider"
+                    android:layout_marginVertical="20dp"/>
 
+                <!-- Sección comentarios -->
                 <TextView
-                    android:text="Comentarios de la Comunidad"
+                    android:text="💬  Comentarios de la Comunidad"
                     android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"/>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerComentarios"
                     android:layout_width="match_parent"
                     android:layout_height="150dp"
-                    android:background="#F9F9F9"
-                    android:layout_marginTop="8dp"/>
+                    android:background="@color/surface_dark"
+                    android:layout_marginBottom="12dp"/>
 
+                <!-- Input comentario -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="8dp">
+                    android:background="@drawable/bg_input_dark"
+                    android:padding="4dp"
+                    android:gravity="center_vertical">
 
                     <EditText
                         android:id="@+id/etNuevoComentario"
@@ -161,16 +203,22 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="Escribe algo..."
-                        android:textSize="14sp"/>
+                        android:textColorHint="@color/text_hint"
+                        android:textColor="@color/text_primary"
+                        android:textSize="14sp"
+                        android:background="@android:color/transparent"
+                        android:padding="10dp"/>
 
                     <ImageButton
                         android:id="@+id/btnEnviarComentario"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
                         android:src="@android:drawable/ic_menu_send"
-                        android:backgroundTint="#1565C0"
+                        android:background="@drawable/bg_button_primary"
+                        android:padding="10dp"
                         app:tint="#FFFFFF"/>
                 </LinearLayout>
+
             </LinearLayout>
         </ScrollView>
     </LinearLayout>

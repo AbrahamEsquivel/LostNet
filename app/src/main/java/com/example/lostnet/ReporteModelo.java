@@ -2,12 +2,12 @@ package com.example.lostnet;
 
 import com.google.gson.annotations.SerializedName;
 
+/** Representa un reporte de objeto perdido o encontrado en el sistema LostNet. */
 public class ReporteModelo {
 
     @SerializedName("id")
     private String id;
 
-    // OJO AQUÍ: En Python lo guardamos como "desc_short", así que aquí debe llamarse igual
     @SerializedName("desc_short")
     private String description;
 
@@ -32,7 +32,6 @@ public class ReporteModelo {
     @SerializedName("user_id")
     private String userId;
 
-    // --- ESTOS ERAN LOS QUE TE FALTABAN ---
     @SerializedName("email")
     private String email;
 
@@ -41,20 +40,19 @@ public class ReporteModelo {
 
     @SerializedName("category")
     private String category;
-    // --------------------------------------
 
-    // --- GETTERS ---
-    public String getId() { return id; }
-    public String getDescription() { return description; }
-    public double getLatitude() { return latitude; }
-    public double getLongitude() { return longitude; }
+    // --- Getters ---
+
+    public String getId()               { return id; }
+    public String getDescription()      { return description; }
+    public double getLatitude()         { return latitude; }
+    public double getLongitude()        { return longitude; }
     public String getSecurityQuestion() { return securityQuestion; }
-    public String getSecurityAnswer() { return securityAnswer; }
-    public String getPhotoUrl() { return photoUrl; }
-    public String getUserId() { return userId; }
-
-    // Getters nuevos (Necesarios para el Pop-Up)
-    public String getEmail() { return email; }
-    public String getPhone() { return phone; }
-    public String getCategory() { return category; }
+    public String getSecurityAnswer()   { return securityAnswer; }
+    public String getStatus()           { return status; }
+    public String getPhotoUrl()         { return photoUrl; }
+    public String getUserId()           { return userId; }
+    public String getEmail()            { return email; }
+    public String getPhone()            { return phone; }
+    public String getCategory()         { return category; }
 }

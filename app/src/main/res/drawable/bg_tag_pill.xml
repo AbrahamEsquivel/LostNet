@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tag pill — fondo morado muy suave -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#EEF0FF" />
+    <corners android:radius="30dp" />
+</shape>

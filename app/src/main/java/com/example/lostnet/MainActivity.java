@@ -7,50 +7,72 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.core.view.ViewCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.navigation.NavigationView;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 import okhttp3.MediaType;
@@ -61,6 +83,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -73,26 +96,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleSignInAccount currentUser;
 
     // UI Nueva (Pro)
-    private DrawerLayout drawerLayout;
-    private NavigationView navigationView;
     private View layoutLogin;
+    private View profilePanelOverlay;
+    private BottomSheetBehavior<View> sheetBehavior;
 
     // Datos y Filtros
     private List<ReporteModelo> listaReportesOriginal = new ArrayList<>(); // Copia para filtrar localmente
     private List<PuntoSeguroModelo> listaPuntosSeguros = new ArrayList<>();
+    private Location userLocation;
 
     // Variables de Reporte (Cámara)
     private File photoFile;
     private ImageView imgPreviewRef;
 
     // Pégalo al inicio de la clase MainActivity, antes del onCreate
-    private static final String BASE_URL = "http://10.155.13.137:5000/";
+    private static final String BASE_URL = AppConstants.BASE_URL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(
-                androidx.appcompat.app.AppCompatDelegate.MODE_NIGHT_NO
+        AppCompatDelegate.setDefaultNightMode(
+                AppCompatDelegate.MODE_NIGHT_NO
         );
         setContentView(R.layout.activity_main); // Cargamos el nuevo diseño
 
@@ -100,12 +124,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         apiService = RetrofitClient.getApiService();
 
         // 2. Vincular Vistas Nuevas
-        drawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.nav_view);
         layoutLogin = findViewById(R.id.layoutLogin);
+        profilePanelOverlay = findViewById(R.id.profilePanelOverlay);
 
-        // 3. Configurar Botón Menú (Hamburguesa)
-        findViewById(R.id.btnMenu).setOnClickListener(v -> drawerLayout.openDrawer(GravityCompat.START));
+        // Configurar BottomSheetBehavior
+        View bottomSheet = findViewById(R.id.bottomSheet);
+        sheetBehavior = BottomSheetBehavior.from(bottomSheet);
+
+        // 3. Configurar Perfil (Avatar)
+        findViewById(R.id.cardAvatar).setOnClickListener(v -> {
+            if (profilePanelOverlay.getVisibility() == View.GONE) {
+                profilePanelOverlay.setVisibility(View.VISIBLE);
+                // Inflar el panel si no está
+                if (((FrameLayout)profilePanelOverlay).getChildCount() == 0) {
+                    LayoutInflater.from(this).inflate(R.layout.layout_profile_panel, (ViewGroup) profilePanelOverlay, true);
+                    configurarPanelPerfil();
+                }
+            }
+        });
+
+        profilePanelOverlay.setOnClickListener(v -> profilePanelOverlay.setVisibility(View.GONE));
 
         findViewById(R.id.fabRefresh).setOnClickListener(v -> {
             Toast.makeText(this, "🔄 Reiniciando...", Toast.LENGTH_SHORT).show();
@@ -114,23 +152,38 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             recreate();
         });
 
-        // 4. Configurar Menú Lateral (Navigation Drawer)
-        navigationView.setNavigationItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_mis_reportes) {
-                startActivity(new Intent(MainActivity.this, MisReportesActivity.class));
-            } else if (id == R.id.nav_alertas) {
-                startActivity(new Intent(MainActivity.this, NotificacionesActivity.class));
-            } else if (id == R.id.nav_logout) {
-                cerrarSesion();
-            } else if (id == R.id.nav_credits) {
-            startActivity(new Intent(MainActivity.this, CreditsActivity.class)); // <--- AQUÍ
-            } else if (id == R.id.nav_about) {
-            startActivity(new Intent(MainActivity.this, AboutActivity.class));   // <--- AQUÍ
-            }
-            drawerLayout.closeDrawer(GravityCompat.START);
-            return true;
+        // 4. Configurar Botones del Bottom Sheet (Navegación por Tabs)
+        View tabExplorar = findViewById(R.id.tabExplorar);
+        View tabTu = findViewById(R.id.tabTu);
+        View tabContribuir = findViewById(R.id.tabContribuir);
+
+        View panelExplorar = findViewById(R.id.panelExplorar);
+        View panelTu = findViewById(R.id.panelTu);
+        View panelContribuir = findViewById(R.id.panelContribuir);
+
+        tabExplorar.setOnClickListener(v -> {
+            panelExplorar.setVisibility(View.VISIBLE);
+            panelTu.setVisibility(View.GONE);
+            panelContribuir.setVisibility(View.GONE);
+            actualizarEstiloTabs(0);
         });
+
+        tabTu.setOnClickListener(v -> {
+            panelExplorar.setVisibility(View.GONE);
+            panelTu.setVisibility(View.VISIBLE);
+            panelContribuir.setVisibility(View.GONE);
+            actualizarEstiloTabs(1);
+        });
+
+        tabContribuir.setOnClickListener(v -> {
+            panelExplorar.setVisibility(View.GONE);
+            panelTu.setVisibility(View.GONE);
+            panelContribuir.setVisibility(View.VISIBLE);
+            actualizarEstiloTabs(2);
+        });
+
+        // Inicializar estilo de pestañas
+        actualizarEstiloTabs(0);
 
         // 5. Configurar Filtros (Chips)
         ChipGroup chipGroup = findViewById(R.id.chipGroupFiltros);
@@ -144,6 +197,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // 6. Configurar Botón Reportar (FAB)
         findViewById(R.id.fabReportar).setOnClickListener(v -> mostrarDialogoReporte());
+
+        // 6.5 Configurar Botón Mi Ubicación (FAB)
+        findViewById(R.id.fabMiUbicacion).setOnClickListener(v -> {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                FusedLocationProviderClient fusedLocationClient =
+                        LocationServices.getFusedLocationProviderClient(this);
+                fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
+                    if (location != null && mMap != null) {
+                        LatLng miPosicion = new LatLng(location.getLatitude(), location.getLongitude());
+                        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(miPosicion, 16));
+                    }
+                });
+            } else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 999);
+            }
+        });
 
         // 7. Configurar Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -175,7 +244,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String idDestino = intent.getStringExtra("ID_DESTINO");
 
             // Esperar un poquito a que el mapa esté listo si venimos entrando
-            new android.os.Handler().postDelayed(() -> {
+            new Handler().postDelayed(() -> {
                 if (mMap != null) {
                     LatLng pos = new LatLng(lat, lon);
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 18)); // Zoom muy cerca
@@ -195,16 +264,87 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             layoutLogin.setVisibility(View.GONE);
             iniciarMapa();
 
-            // Actualizar header del menú lateral con datos reales
-            View header = navigationView.getHeaderView(0);
-            TextView txtUser = header.findViewById(R.id.txtNavUser);
-            TextView txtEmail = header.findViewById(R.id.txtNavEmail);
-            if(account.getDisplayName() != null) txtUser.setText(account.getDisplayName());
-            if(account.getEmail() != null) txtEmail.setText(account.getEmail());
+            // Cargar Foto en el Avatar de la barra de búsqueda
+            ImageView imgAvatar = findViewById(R.id.imgAvatar);
+            if (account.getPhotoUrl() != null && imgAvatar != null) {
+                Glide.with(this)
+                        .load(account.getPhotoUrl())
+                        .circleCrop()
+                        .into(imgAvatar);
+            }
+
+            // Si el panel de perfil ya está inflado, actualizarlo
+            actualizarDatosPerfil(account);
+
+            // --- ¡NUEVO! LLAMAMOS A LA MEDALLA ---
+            cargarMedallaUsuario(account.getEmail());
 
         } else {
             // Usuario desconectado: Mostramos pantalla blanca
             layoutLogin.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void configurarPanelPerfil() {
+        View panel = findViewById(R.id.profilePanelContainer);
+        if (panel == null) return;
+
+        panel.findViewById(R.id.btnCerrarPerfil).setOnClickListener(v -> profilePanelOverlay.setVisibility(View.GONE));
+        panel.findViewById(R.id.menuCerrarSesion).setOnClickListener(v -> {
+            profilePanelOverlay.setVisibility(View.GONE);
+            cerrarSesion();
+        });
+        panel.findViewById(R.id.menuMisReportes).setOnClickListener(v -> startActivity(new Intent(this, MisReportesActivity.class)));
+        panel.findViewById(R.id.menuMisAlertas).setOnClickListener(v -> startActivity(new Intent(this, NotificacionesActivity.class)));
+        panel.findViewById(R.id.menuSobreApp).setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
+        panel.findViewById(R.id.menuCreditos).setOnClickListener(v -> startActivity(new Intent(this, CreditsActivity.class)));
+
+        if (currentUser != null) actualizarDatosPerfil(currentUser);
+    }
+
+    private void actualizarEstiloTabs(int index) {
+        ImageView iconExp = findViewById(R.id.iconExplorar);
+        TextView txtExp = findViewById(R.id.txtExplorar);
+        ImageView iconTu = findViewById(R.id.iconTu);
+        TextView txtTu = findViewById(R.id.txtTu);
+        ImageView iconCont = findViewById(R.id.iconContribuir);
+        TextView txtCont = findViewById(R.id.txtContribuir);
+
+        int colorActive = Color.parseColor("#1A73E8");
+        int colorInactive = Color.parseColor("#9AA0A6");
+
+        // Explorar
+        iconExp.setColorFilter(index == 0 ? colorActive : colorInactive);
+        txtExp.setTextColor(index == 0 ? colorActive : colorInactive);
+        txtExp.setTypeface(null, index == 0 ? Typeface.BOLD : Typeface.NORMAL);
+
+        // Tú
+        iconTu.setColorFilter(index == 1 ? colorActive : colorInactive);
+        txtTu.setTextColor(index == 1 ? colorActive : colorInactive);
+        txtTu.setTypeface(null, index == 1 ? Typeface.BOLD : Typeface.NORMAL);
+
+        // Contribuir (Cómo funciona)
+        iconCont.setColorFilter(index == 2 ? colorActive : colorInactive);
+        txtCont.setTextColor(index == 2 ? colorActive : colorInactive);
+        txtCont.setTypeface(null, index == 2 ? Typeface.BOLD : Typeface.NORMAL);
+    }
+
+    private void actualizarDatosPerfil(GoogleSignInAccount account) {
+        View panel = findViewById(R.id.profilePanelContainer);
+        if (panel != null && account != null) {
+            TextView txtUser = panel.findViewById(R.id.txtPerfilNombre);
+            TextView txtEmail = panel.findViewById(R.id.txtPerfilEmail);
+            ImageView imgPerfil = panel.findViewById(R.id.imgPerfilAvatar);
+
+            if (account.getDisplayName() != null) txtUser.setText(account.getDisplayName());
+            if (account.getEmail() != null) txtEmail.setText(account.getEmail());
+
+            if (account.getPhotoUrl() != null && imgPerfil != null) {
+                Glide.with(this)
+                        .load(account.getPhotoUrl())
+                        .circleCrop()
+                        .into(imgPerfil);
+            }
         }
     }
 
@@ -234,6 +374,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
+        // Desactivar UI por defecto de Google Maps
+        mMap.getUiSettings().setCompassEnabled(false);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.getUiSettings().setMapToolbarEnabled(false); // También quita botones de "Abrir en Maps"
+
         // --- LÓGICA DE UBICACIÓN REAL ---
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
@@ -241,11 +386,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             mMap.setMyLocationEnabled(true);
 
             // 2. Obtener la coordenada REAL del GPS del celular
-            com.google.android.gms.location.FusedLocationProviderClient fusedLocationClient =
-                    com.google.android.gms.location.LocationServices.getFusedLocationProviderClient(this);
+            FusedLocationProviderClient fusedLocationClient =
+                    LocationServices.getFusedLocationProviderClient(this);
 
             fusedLocationClient.getLastLocation().addOnSuccessListener(this, location -> {
                 if (location != null) {
+                    userLocation = location;
                     double lat = location.getLatitude();
                     double lon = location.getLongitude();
 
@@ -257,6 +403,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     // 4. Avisarle al servidor que estás aquí
                     enviarUbicacionAlServer(lat, lon);
+
+                    // 5. Refrescar lista de cercanos ahora que tenemos ubicación
+                    cargarExplorarCercanos();
                 } else {
                     // Solo si el GPS falla, nos vamos al centro por defecto para no ver el mar
                     Log.e("UBICACION", "⚠️ GPS encendido pero sin señal. Usando fallback.");
@@ -293,6 +442,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     listaReportesOriginal = response.body();
                     // 2. Pintamos todo inicialmente
                     filtrarMapa("Todos");
+                    // 3. Cargar reportes cercanos en el BottomSheet
+                    cargarExplorarCercanos();
                 }
             }
             @Override
@@ -300,6 +451,73 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Toast.makeText(MainActivity.this, "Error de red", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void cargarExplorarCercanos() {
+        if (userLocation == null || listaReportesOriginal.isEmpty()) return;
+
+        List<ReporteModelo> ajenosCercanos = new ArrayList<>();
+        String myEmail = (currentUser != null) ? currentUser.getEmail() : "";
+
+        for (ReporteModelo r : listaReportesOriginal) {
+            // Filtrar: Que NO sea mío
+            if (myEmail != null && r.getEmail() != null && r.getEmail().equalsIgnoreCase(myEmail)) {
+                continue;
+            }
+
+            float[] results = new float[1];
+            Location.distanceBetween(
+                    userLocation.getLatitude(), userLocation.getLongitude(),
+                    r.getLatitude(), r.getLongitude(),
+                    results
+            );
+
+            // Filtro: 2.5 km (2500 metros)
+            if (results[0] <= 2500) {
+                ajenosCercanos.add(r);
+            }
+        }
+
+        RecyclerView rv = findViewById(R.id.recyclerExplorar);
+        if (rv != null) {
+            rv.setLayoutManager(new LinearLayoutManager(this));
+            rv.setAdapter(new ReportesGmapsAdapter(this, ajenosCercanos, reporte -> {
+                if (sheetBehavior != null) {
+                    sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                }
+                if (mMap != null) {
+                    LatLng pos = new LatLng(reporte.getLatitude(), reporte.getLongitude());
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 17));
+                }
+            }));
+        }
+    }
+
+    private void cargarMisReportesTab() {
+        if (listaReportesOriginal.isEmpty() || currentUser == null) return;
+
+        List<ReporteModelo> misReportes = new ArrayList<>();
+        String myEmail = currentUser.getEmail();
+
+        for (ReporteModelo r : listaReportesOriginal) {
+            if (myEmail != null && r.getEmail() != null && r.getEmail().equalsIgnoreCase(myEmail)) {
+                misReportes.add(r);
+            }
+        }
+
+        RecyclerView rv = findViewById(R.id.recyclerTu);
+        if (rv != null) {
+            rv.setLayoutManager(new LinearLayoutManager(this));
+            rv.setAdapter(new ReportesGmapsAdapter(this, misReportes, reporte -> {
+                if (sheetBehavior != null) {
+                    sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                }
+                if (mMap != null) {
+                    LatLng pos = new LatLng(reporte.getLatitude(), reporte.getLongitude());
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 17));
+                }
+            }));
+        }
     }
 
     private void filtrarMapa(String categoriaFiltro) {
@@ -326,14 +544,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 LatLng pos = new LatLng(rep.getLatitude(), rep.getLongitude());
 
                 float colorPin;
-                if (currentUser != null && rep.getUserId() != null &&
-                        rep.getUserId().equals(currentUser.getId())) {
-                    colorPin = BitmapDescriptorFactory.HUE_AZURE; // Míos
+                if (currentUser != null && rep.getEmail() != null &&
+                        rep.getEmail().equals(currentUser.getEmail())) {
+                    colorPin = BitmapDescriptorFactory.HUE_AZURE; // Míos (Azul)
                 } else {
-                    colorPin = BitmapDescriptorFactory.HUE_RED; // Otros
+                    colorPin = BitmapDescriptorFactory.HUE_RED; // Otros (Rojo)
                 }
 
-                com.google.android.gms.maps.model.Marker marker = mMap.addMarker(
+                Marker marker = mMap.addMarker(
                         new MarkerOptions()
                                 .position(pos)
                                 .title(rep.getDescription())
@@ -346,6 +564,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // --- LÓGICA FORMULARIO Y CÁMARA ---
     private void mostrarDialogoReporte() {
+
         if (mMap == null) return;
         LatLng centro = mMap.getCameraPosition().target;
 
@@ -358,22 +577,44 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // UI Referencias
         EditText etDesc = view.findViewById(R.id.etDesc);
         EditText etPhone = view.findViewById(R.id.etPhone);
-        Spinner spinner = view.findViewById(R.id.spinnerCat);
+        AutoCompleteTextView etCat = view.findViewById(R.id.etCategoria);
         EditText etSecQ = view.findViewById(R.id.etSecQ);
         EditText etSecA = view.findViewById(R.id.etSecA);
-        Button btnCamara = view.findViewById(R.id.btnCamara);
+        View btnCamara = view.findViewById(R.id.btnCamara);
         Button btnEnviar = view.findViewById(R.id.btnEnviar);
-        Button btnGaleria = view.findViewById(R.id.btnGaleria);
+        View btnGaleria = view.findViewById(R.id.btnGaleria);
         imgPreviewRef = view.findViewById(R.id.imgPreview);
+
+        // --- REFERENCIA AL SWITCH ---
+        SwitchMaterial switchTipo = view.findViewById(R.id.switchTipoReporte);
+        TextView txtStatus = view.findViewById(R.id.txtStatusSwitch);
+        ImageView iconStatus = view.findViewById(R.id.iconTipoReporte);
+
+        if (switchTipo != null) {
+            switchTipo.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    txtStatus.setText("¡Objeto Encontrado!");
+                    txtStatus.setTextColor(ContextCompat.getColor(this, R.color.primary));
+                    iconStatus.setImageResource(android.R.drawable.ic_menu_search);
+                    iconStatus.setColorFilter(ContextCompat.getColor(this, R.color.primary));
+                } else {
+                    txtStatus.setText("Objeto Perdido");
+                    txtStatus.setTextColor(Color.parseColor("#202124"));
+                    iconStatus.setImageResource(android.R.drawable.ic_menu_help);
+                    iconStatus.setColorFilter(ContextCompat.getColor(this, R.color.danger));
+                }
+            });
+        }
 
         // Resetear foto temporal al abrir el dialog
         photoFile = null;
         imgPreviewRef.setVisibility(View.GONE);
 
-        // Spinner Setup
+        // AutoCompleteTextView (Dropdown) Setup
         String[] categorias = {"Electrónica", "Ropa", "Documentos", "Otros"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, categorias);
-        spinner.setAdapter(adapter);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, categorias);
+        etCat.setAdapter(adapter);
+        etCat.setText(categorias[0], false); // Seleccionar primero por defecto
 
         // Botón Cámara
         btnCamara.setOnClickListener(v -> despacharTomarFoto());
@@ -399,6 +640,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 fotoFinal = comprimirImagen(photoFile);
             }
 
+            // --- ¡NUEVA LÓGICA DEL SWITCH! ---
+            // Si el switch está encendido, es FOUND (Encontrado). Si no, es LOST (Perdido).
+            String statusReporte = (switchTipo != null && switchTipo.isChecked()) ? "FOUND" : "LOST";
+
             // 2. Bloquear botón para evitar doble envío
             btnEnviar.setEnabled(false);
             btnEnviar.setText("ENVIANDO...");
@@ -409,27 +654,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     currentUser.getEmail(),
                     etPhone.getText().toString(),
                     etDesc.getText().toString(),
-                    spinner.getSelectedItem().toString(),
+                    etCat.getText().toString(),
                     String.valueOf(centro.latitude),
                     String.valueOf(centro.longitude),
                     etSecQ.getText().toString(),
                     etSecA.getText().toString(),
+                    statusReporte, // <--- Pasamos el nuevo dato aquí
                     dialog,
                     fotoFinal // Pasamos null si no hay foto
             );
         });
 
+        // Configurar botón cerrar del header
+        View btnX = view.findViewById(R.id.btnCerrarDialog);
+        if (btnX != null) btnX.setOnClickListener(v -> dialog.dismiss());
+
         // Permitir cancelar tocando fuera (opcional) o agregar botón cancelar
         dialog.setCanceledOnTouchOutside(true);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
         dialog.show();
     }
 
     // --- MÉTODO CORE DE ENVÍO (PROTEGIDO CONTRA NULL) ---
     private void enviarDatosAlServidor(String uid, String email, String phone, String desc,
                                        String cat, String latStr, String lonStr, String sq, String sa,
+                                       String statusReporte, // <--- Acepta el String aquí
                                        AlertDialog dialog, @Nullable File archivoAEnviar) {
 
-        // ... (La creación de RequestBody se queda IGUAL) ...
+        // 1. Convertimos todo a RequestBody (Texto)
         RequestBody uidPart = RequestBody.create(MediaType.parse("text/plain"), uid);
         RequestBody emailPart = RequestBody.create(MediaType.parse("text/plain"), email);
         RequestBody phonePart = RequestBody.create(MediaType.parse("text/plain"), phone);
@@ -440,14 +694,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         RequestBody sqPart = RequestBody.create(MediaType.parse("text/plain"), sq);
         RequestBody saPart = RequestBody.create(MediaType.parse("text/plain"), sa);
 
+        // --- Convertimos el status (FOUND/LOST) para enviarlo ---
+        RequestBody statusPart = RequestBody.create(MediaType.parse("text/plain"), statusReporte);
+
         MultipartBody.Part body = null;
         if (archivoAEnviar != null) {
             RequestBody reqFile = RequestBody.create(MediaType.parse("image/jpeg"), archivoAEnviar);
             body = MultipartBody.Part.createFormData("foto", archivoAEnviar.getName(), reqFile);
         }
 
-        // Llamada a Retrofit
-        apiService.enviarReporte(uidPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, sqPart, saPart, body)
+        // Llamada a Retrofit (¡Asegúrate de que statusPart esté aquí adentro!)
+        apiService.enviarReporte(uidPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, sqPart, saPart, statusPart, body)
                 .enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -456,29 +713,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             dialog.dismiss();
 
                             // --- CORRECCIÓN CLAVE: PINTAR PIN MANUALMENTE ---
-                            // No esperamos a cargarReportes(), lo ponemos nosotros mismos
                             try {
                                 double lat = Double.parseDouble(latStr);
                                 double lon = Double.parseDouble(lonStr);
                                 LatLng pos = new LatLng(lat, lon);
 
-                                // Agregamos el marcador rojo inmediatamente
                                 if (mMap != null) {
                                     mMap.addMarker(new MarkerOptions()
                                             .position(pos)
                                             .title(desc));
-
-                                    // Movemos la cámara al nuevo reporte
                                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 16));
                                 }
                             } catch (Exception e) {
                                 Log.e("Mapa", "Error pintando pin manual", e);
                             }
 
-                            // --- DESCARGAR LISTA CON RETRASO (Seguridad) ---
-                            // Le damos 2 segundos al servidor para que termine de escribir el archivo
-                            new android.os.Handler().postDelayed(() -> {
+                            // --- DESCARGAR LISTA Y MEDALLA CON RETRASO ---
+                            new Handler().postDelayed(() -> {
                                 cargarReportes();
+
+                                // ¡AQUÍ ESTÁ LA LÍNEA NUEVA PARA EL RANGO EN TIEMPO REAL! 🏅
+                                cargarMedallaUsuario(email);
+
                             }, 2000);
 
                         } else {
@@ -491,16 +747,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         String errorMsg = t.getMessage();
 
                         // --- PARCHE DE SEGURIDAD ---
-                        // Si el error es "fin de stream" pero sabemos que el servidor sí jala:
                         if (errorMsg != null && (errorMsg.contains("unexpected end of stream") || errorMsg.contains("closed"))) {
-
-                            // Fingimos que fue un éxito
                             Toast.makeText(MainActivity.this, "¡Reporte enviado! (Stream cerrado)", Toast.LENGTH_LONG).show();
                             if (dialog != null) dialog.dismiss();
 
-                            // Ejecutamos la lógica de éxito manualmente
                             try {
-                                // Pintamos el pin manual (copia aquí la lógica de pintar el pin que te pasé antes)
                                 double lat = Double.parseDouble(latStr);
                                 double lon = Double.parseDouble(lonStr);
                                 LatLng pos = new LatLng(lat, lon);
@@ -510,9 +761,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             } catch (Exception e) {}
 
-                            // Recargamos lista
-                            new android.os.Handler().postDelayed(() -> cargarReportes(), 2000);
-                            return; // Salimos para no mostrar el mensaje de error
+                            new Handler().postDelayed(() -> {
+                                cargarReportes();
+
+                                // ¡Y AQUÍ ESTÁ LA OTRA LÍNEA NUEVA! 🏅
+                                cargarMedallaUsuario(email);
+
+                            }, 2000);
+                            return;
                         }
 
                         // Error real
@@ -528,7 +784,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Button btn = dialog.findViewById(R.id.btnEnviar);
             if(btn != null) {
                 btn.setEnabled(true);
-                btn.setText("ENVIAR REPORTE");
+                btn.setText("PUBLICAR REPORTE");
             }
         }
     }
@@ -548,7 +804,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void despacharTomarFoto() {
-        if (androidx.core.content.ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 100);
             return;
@@ -651,8 +907,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         File destino = crearArchivoImagen(); // Reusamos tu función existente
 
         // Abrimos el flujo de datos de la URI y lo copiamos al archivo destino
-        try (java.io.InputStream inputStream = getContentResolver().openInputStream(uri);
-             java.io.OutputStream outputStream = new java.io.FileOutputStream(destino)) {
+        try (InputStream inputStream = getContentResolver().openInputStream(uri);
+             OutputStream outputStream = new FileOutputStream(destino)) {
 
             byte[] buffer = new byte[4 * 1024]; // Buffer de 4KB
             int read;
@@ -709,14 +965,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Button btnEliminar = view.findViewById(R.id.btnEliminarDetalle);
 
         // Sección de Comentarios
-        androidx.recyclerview.widget.RecyclerView recyclerComents = view.findViewById(R.id.recyclerComentarios);
+        RecyclerView recyclerComents = view.findViewById(R.id.recyclerComentarios);
         EditText etComentario = view.findViewById(R.id.etNuevoComentario);
-        android.widget.ImageButton btnEnviarCom = view.findViewById(R.id.btnEnviarComentario);
+        ImageButton btnEnviarCom = view.findViewById(R.id.btnEnviarComentario);
 
         // --- B. LLENAR DATOS BÁSICOS (Solo los públicos generales) ---
         txtDesc.setText(reporte.getDescription());
-        txtCat.setText(reporte.getCategory() != null ? reporte.getCategory() : "General");
+        String estadoVisual = "🔴 PERDIDO";
+        if (reporte.getStatus() != null && reporte.getStatus().equals("FOUND")) {
+            estadoVisual = "🟢 ENCONTRADO";
+        }
 
+        // Concatenamos el estatus con la categoría
+        String catTexto = reporte.getCategory() != null ? reporte.getCategory() : "General";
+        txtCat.setText(estadoVisual + "  |  " + catTexto);
         // La pregunta la dejamos visible siempre
         txtPregunta.setText("P: " + (reporte.getSecurityQuestion() != null ? reporte.getSecurityQuestion() : "N/A"));
 
@@ -726,7 +988,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if(rutaFoto.startsWith("/")) rutaFoto = rutaFoto.substring(1);
             String fullUrl = BASE_URL + rutaFoto;
 
-            com.bumptech.glide.Glide.with(this)
+            Glide.with(this)
                     .load(fullUrl)
                     .placeholder(android.R.drawable.ic_menu_camera)
                     .error(android.R.drawable.stat_notify_error)
@@ -800,9 +1062,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             });
         }
+        String correoAutor = reporte.getEmail();
+        if (correoAutor != null && !correoAutor.isEmpty()) {
+            apiService.obtenerTipoUsuario(correoAutor).enqueue(new Callback<UsuarioGamificacion>() {
+                @Override
+                public void onResponse(Call<UsuarioGamificacion> call, Response<UsuarioGamificacion> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        String rango = response.body().getTipo();
+
+                        // Le ponemos su emoji para que se vea bien pro
+                        String emoji = "🔍"; // Buscador por defecto
+                        if (rango.equalsIgnoreCase("SABUESO")) emoji = "🕵️‍♂️";
+                        else if (rango.equalsIgnoreCase("PERDEDOR")) emoji = "🤦‍♂️";
+
+                        // Le pegamos el rango al lado del correo (respetando si está censurado o no)
+                        String textoActual = txtEmail.getText().toString();
+                        txtEmail.setText(textoActual + "  |  " + emoji + " " + rango);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<UsuarioGamificacion> call, Throwable t) {
+                    // Si falla el internet, simplemente dejamos el correo normal, no pasa nada.
+                    Log.e("Gamificacion", "No se pudo cargar la medalla en el popup");
+                }
+            });
+        }
 
         // --- E. LÓGICA DE COMENTARIOS (EL MURO) ---
-        recyclerComents.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        recyclerComents.setLayoutManager(new LinearLayoutManager(this));
 
         Runnable cargarComentarios = () -> {
             apiService.obtenerComentarios(reporte.getId()).enqueue(new Callback<List<ComentarioModelo>>() {
@@ -822,7 +1110,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             String texto = etComentario.getText().toString().trim();
             if (texto.isEmpty()) return;
 
-            java.util.HashMap<String, Object> body = new java.util.HashMap<>();
+            HashMap<String, Object> body = new HashMap<>();
             body.put("report_id", reporte.getId());
             body.put("user_name", currentUser != null ? currentUser.getDisplayName() : "Anónimo");
             body.put("text", texto);
@@ -848,7 +1136,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         btnCerrar.setOnClickListener(v -> dialog.dismiss());
 
         if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         }
 
         dialog.show();
@@ -868,7 +1156,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             numeroLimpio = numeroLimpio.replace("+", "");
 
             String mensaje = "Hola, vi en LostNet que perdiste tu *" + objeto + "*. ¡Creo que yo lo encontré! ¿Dónde nos vemos?";
-            String url = "https://api.whatsapp.com/send?phone=" + numeroLimpio + "&text=" + java.net.URLEncoder.encode(mensaje, "UTF-8");
+            String url = "https://api.whatsapp.com/send?phone=" + numeroLimpio + "&text=" + URLEncoder.encode(mensaje, "UTF-8");
 
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setData(Uri.parse(url));
@@ -942,5 +1230,48 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return phone.substring(0, 2) + "****" + phone.substring(phone.length() - 2);
         }
         return "****";
+    }
+
+    private void cargarMedallaUsuario(String emailUsuario) {
+        // Asegurarnos de que Retrofit esté listo
+        if (apiService == null) {
+            apiService = RetrofitClient.getApiService();
+        }
+
+        apiService.obtenerTipoUsuario(emailUsuario).enqueue(new Callback<UsuarioGamificacion>() {
+            @Override
+            public void onResponse(Call<UsuarioGamificacion> call, Response<UsuarioGamificacion> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // El servidor nos da el rango (Sabueso, Buscador, etc.)
+                    String medalla = response.body().getTipo();
+
+                    // ¡MAGIA! Lo inyectamos en el nuevo panel de perfil
+                    View panel = findViewById(R.id.profilePanelContainer);
+                    if (panel != null) {
+                        TextView txtMedalla = panel.findViewById(R.id.txtPerfilBadge);
+                        if (txtMedalla != null) {
+                            String emoji = "🔍";
+                            int backgroundId = R.drawable.bg_badge_buscador;
+
+                            if (medalla.equalsIgnoreCase("SABUESO")) {
+                                emoji = "🕵️‍♂️";
+                                backgroundId = R.drawable.bg_badge_sabueso;
+                            } else if (medalla.equalsIgnoreCase("PERDEDOR")) {
+                                emoji = "🤦‍♂️";
+                                backgroundId = R.drawable.bg_badge_perdedor;
+                            }
+
+                            txtMedalla.setText(emoji + " " + medalla);
+                            txtMedalla.setBackgroundResource(backgroundId);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UsuarioGamificacion> call, Throwable t) {
+                Log.e("GAMIFICACION", "Error al cargar medalla: " + t.getMessage());
+            }
+        });
     }
 }

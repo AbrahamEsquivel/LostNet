@@ -4,16 +4,21 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Adaptador para mostrar la sección de comentarios dentro del detalle de un reporte.
+ */
 public class ComentariosAdapter extends RecyclerView.Adapter<ComentariosAdapter.ViewHolder> {
 
-    private List<ComentarioModelo> lista;
+    private final List<ComentarioModelo> lista;
 
     public ComentariosAdapter(List<ComentarioModelo> lista) {
         this.lista = lista;
@@ -22,7 +27,6 @@ public class ComentariosAdapter extends RecyclerView.Adapter<ComentariosAdapter.
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Usaremos un layout simple de Android para no crear otro XML
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(android.R.layout.simple_list_item_2, parent, false);
         return new ViewHolder(view);
@@ -30,24 +34,28 @@ public class ComentariosAdapter extends RecyclerView.Adapter<ComentariosAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        ComentarioModelo c = lista.get(position);
+        ComentarioModelo comentario = lista.get(position);
 
-        // Convertir fecha
-        Date date = new Date(c.getTimestamp() * 1000L);
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
+        // El servidor devuelve timestamp en segundos; Java usa milisegundos.
+        Date fecha = new Date(comentario.getTimestamp() * 1000L);
+        SimpleDateFormat formato = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
 
-        holder.txtNombre.setText(c.getUserName() + " (" + sdf.format(date) + ")");
-        holder.txtMensaje.setText(c.getText());
+        holder.txtNombre.setText(comentario.getUserName() + " (" + formato.format(fecha) + ")");
+        holder.txtMensaje.setText(comentario.getText());
     }
 
     @Override
-    public int getItemCount() { return lista.size(); }
+    public int getItemCount() {
+        return lista.size();
+    }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txtNombre, txtMensaje;
-        public ViewHolder(@NonNull View itemView) {
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        final TextView txtNombre;
+        final TextView txtMensaje;
+
+        ViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtNombre = itemView.findViewById(android.R.id.text1); // ID nativo de Android
+            txtNombre  = itemView.findViewById(android.R.id.text1);
             txtMensaje = itemView.findViewById(android.R.id.text2);
         }
     }

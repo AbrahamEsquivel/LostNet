@@ -1,219 +1,605 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout
+<!--
+  ══════════════════════════════════════════════════════
+   LostNet — activity_main.xml  (Google Maps style UI)
+  ══════════════════════════════════════════════════════
+  Estructura:
+    1. Map fragment (fondo completo)
+    2. TopBar flotante: [Logo | SearchBar | Avatar]
+    3. Chips de filtro (horizontal scroll)
+    4. FAB Refresh (debajo de chips)
+    5. FABs esquina derecha (Reportar + Mi Ubicación)
+    6. Bottom Sheet deslizable con 3 tabs
+    7. Overlay de pantalla de Login
+    8. Overlay de panel de perfil (se maneja desde código)
+  ══════════════════════════════════════════════════════
+-->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:openDrawer="start">
+    android:background="#F5F5F5">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 1. MAPA (ocupa toda la pantalla como fondo) -->
+    <!-- ─────────────────────────────────────────── -->
+    <fragment
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"/>
 
-        <fragment
-            android:id="@+id/map"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+    <!-- ── MARCADOR CENTRAL (Puntero fijo) ── -->
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="center"
+        android:src="@android:drawable/ic_menu_mylocation"
+        app:tint="#1A73E8"
+        android:elevation="10dp"
+        android:alpha="0.7"
+        android:clickable="false"
+        android:focusable="false"
+        android:translationY="-24dp"/>
 
-        <ImageView
-            android:id="@+id/imgPinCentro"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_myplaces"
-            app:tint="#D32F2F"
-            android:layout_marginBottom="24dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:contentDescription="Pin Central" />
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 2 + 3 + 4. TOP OVERLAY: búsqueda + chips + refresh -->
+    <!-- ─────────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/topOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingTop="44dp"
+        android:paddingBottom="6dp"
+        android:paddingHorizontal="12dp">
+
+        <!-- ── 2. BARRA DE BÚSQUEDA ── -->
         <LinearLayout
-            android:id="@+id/topBarContainer"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingTop="40dp"
-            android:paddingBottom="10dp"
-            android:paddingStart="16dp"
+            android:layout_height="52dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="10dp">
 
-            app:layout_constraintTop_toTopOf="parent">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="10dp">
+            <!-- CardView de la barra de búsqueda -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardSearchBar"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="6dp"
+                app:cardBackgroundColor="#FFFFFF">
 
-                <ImageButton
-                    android:id="@+id/btnMenu"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@android:drawable/ic_menu_sort_by_size"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    app:tint="#1565C0"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="14dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="LostNet"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    android:textColor="#1565C0"
-                    android:layout_marginStart="16dp"/>
-            </LinearLayout>
+                    <!-- Logo LostNet mini -->
+                    <ImageView
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:src="@drawable/logo"
+                        android:scaleType="fitCenter"
+                        android:layout_marginEnd="10dp"/>
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:scrollbars="none">
+                    <!-- Campo de búsqueda -->
+                    <EditText
+                        android:id="@+id/etBusqueda"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:hint="Busca objetos, nombres..."
+                        android:textColorHint="#9AA0A6"
+                        android:textColor="#1A1A1A"
+                        android:textSize="14sp"
+                        android:background="@android:color/transparent"
+                        android:importantForAutofill="no"
+                        android:inputType="text"
+                        android:imeOptions="actionSearch"
+                        android:maxLines="1"
+                        android:singleLine="true"/>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/chipGroupFiltros"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:singleSelection="true">
+            <!-- ── Avatar del usuario (abre perfil) ── -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardAvatar"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="10dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="6dp"
+                app:cardBackgroundColor="#E8F0FE"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackgroundBorderless">
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipTodos"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Todos"
-                        android:checked="true"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipDocumentos"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Documentos"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipElec"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Electrónica"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipRopa"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ropa"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipOtros"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Otros"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
-
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
+                <ImageView
+                    android:id="@+id/imgAvatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:src="@android:drawable/ic_menu_myplaces"
+                    android:scaleType="centerCrop"/>
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
 
-        <androidx.cardview.widget.CardView
-            android:layout_width="wrap_content"
+        <!-- ── 3. CHIPS DE FILTRO ── -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp"
-            app:cardBackgroundColor="#E6FFFFFF"
-            app:layout_constraintTop_toBottomOf="@+id/topBarContainer"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginTop="16dp"
-            android:layout_marginStart="16dp">
+            android:scrollbars="none"
+            android:layout_marginBottom="10dp">
 
-            <LinearLayout
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroupFiltros"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                app:singleSelection="true"
+                app:selectionRequired="false"
+                app:chipSpacingHorizontal="8dp">
+
+                <!-- Chip: Todos -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipTodos"
+                    style="@style/LostNet_Chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Todos"
+                    app:chipIcon="@android:drawable/ic_menu_search"
+                    app:chipIconVisible="true"
+                    android:checked="true"
+                    app:iconStartPadding="8dp"/>
+
+                <!-- Chip: Documentos -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipDocumentos"
+                    style="@style/LostNet_Chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Documentos"
+                    app:chipIcon="@android:drawable/ic_menu_agenda"
+                    app:chipIconVisible="true"
+                    app:iconStartPadding="8dp"/>
+
+                <!-- Chip: Electrónica -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipElec"
+                    style="@style/LostNet_Chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Electrónica"
+                    app:chipIcon="@android:drawable/ic_menu_camera"
+                    app:chipIconVisible="true"
+                    app:iconStartPadding="8dp"/>
+
+                <!-- Chip: Ropa -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipRopa"
+                    style="@style/LostNet_Chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ropa"
+                    app:chipIcon="@android:drawable/ic_menu_gallery"
+                    app:chipIconVisible="true"
+                    app:iconStartPadding="8dp"/>
+
+                <!-- Chip: Otros -->
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipOtros"
+                    style="@style/LostNet_Chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Otros"
+                    app:chipIcon="@android:drawable/ic_menu_help"
+                    app:chipIconVisible="true"
+                    app:iconStartPadding="8dp"/>
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
+
+        <!-- ── 4. BOTÓN REFRESH (estilo FAB de Google Maps) ── -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginEnd="8dp">
+
+            <androidx.cardview.widget.CardView
+                android:id="@+id/fabRefresh"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="#E8F0FE"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@android:drawable/ic_popup_sync"
+                    app:tint="#1A73E8"/>
+            </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ────────────────────────────────────────── -->
+    <!-- 5. FABs esquina derecha (Ubicación + Reportar) -->
+    <!-- ────────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/fabsContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="90dp">
+
+        <!-- FAB Mi Ubicación -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/fabMiUbicacion"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="6dp"
+            app:cardBackgroundColor="#E8F0FE"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackgroundBorderless"
+            android:layout_marginBottom="12dp">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_menu_compass"
+                app:tint="#1A73E8"/>
+        </androidx.cardview.widget.CardView>
+
+        <!-- FAB Agregar Reporte -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/fabReportar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="8dp"
+            app:cardBackgroundColor="#E8F0FE"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackgroundBorderless">
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_input_add"
+                app:tint="#1A73E8"/>
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 6. BOTTOM SHEET DESLIZABLE con 3 secciones  -->
+    <!-- ─────────────────────────────────────────── -->
+    <LinearLayout
+        android:id="@+id/bottomSheet"
+        android:layout_width="match_parent"
+        android:layout_height="520dp"
+        android:orientation="vertical"
+        android:background="@drawable/bg_bottom_sheet_top"
+        android:elevation="10dp"
+        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
+        app:behavior_peekHeight="80dp"
+        app:behavior_hideable="false"
+        app:behavior_fitToContents="true">
+
+        <!-- Handle pill de drag -->
+        <View
+            android:layout_width="40dp"
+            android:layout_height="4dp"
+            android:background="@drawable/bg_handle_pill"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="2dp"/>
+
+        <!-- ── BARRA DE NAVEGACIÓN CON 3 TABS ── -->
+        <LinearLayout
+            android:id="@+id/bottomTabBar"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="#FFFFFF"
+            android:paddingHorizontal="8dp">
+
+            <!-- Tab: Explorar -->
+            <LinearLayout
+                android:id="@+id/tabExplorar"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground">
 
-                <LinearLayout
+                <ImageView
+                    android:id="@+id/iconExplorar"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@android:drawable/ic_dialog_map"
+                    app:tint="#1A73E8"
+                    android:layout_marginBottom="3dp"/>
+
+                <TextView
+                    android:id="@+id/txtExplorar"
                     android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Explorar"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#1A73E8"/>
+            </LinearLayout>
+
+            <!-- Tab: Tú -->
+            <LinearLayout
+                android:id="@+id/tabTu"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground">
+
+                <ImageView
+                    android:id="@+id/iconTu"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@android:drawable/ic_menu_myplaces"
+                    app:tint="#9AA0A6"
+                    android:layout_marginBottom="3dp"/>
+
+                <TextView
+                    android:id="@+id/txtTu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tú"
+                    android:textSize="11sp"
+                    android:textColor="#9AA0A6"/>
+            </LinearLayout>
+
+            <!-- Tab: Contribuir -->
+            <LinearLayout
+                android:id="@+id/tabContribuir"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?android:attr/selectableItemBackground">
+
+                <ImageView
+                    android:id="@+id/iconContribuir"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@android:drawable/ic_menu_help"
+                    app:tint="#9AA0A6"
+                    android:layout_marginBottom="3dp"/>
+
+                <TextView
+                    android:id="@+id/txtContribuir"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="¿Cómo funciona?"
+                    android:textSize="11sp"
+                    android:textColor="#9AA0A6"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ── CONTENIDO DE CADA TAB ── -->
+
+        <!-- PANEL: Explorar (todos los reportes) -->
+        <LinearLayout
+            android:id="@+id/panelExplorar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:visibility="visible">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reportes cercanos"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerExplorar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="20dp"/>
+        </LinearLayout>
+
+        <!-- PANEL: Tú (mis reportes) -->
+        <LinearLayout
+            android:id="@+id/panelTu"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Tus reportes"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A"
+                android:paddingHorizontal="20dp"
+                android:paddingTop="16dp"
+                android:paddingBottom="8dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerTu"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="20dp"/>
+        </LinearLayout>
+
+        <!-- PANEL: Contribuir (¿Cómo funciona?) -->
+        <LinearLayout
+            android:id="@+id/panelContribuir"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="#FFFFFF"
+            android:visibility="gone"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="¿Cómo funciona LostNet?"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A"
+                android:layout_marginBottom="16dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="LostNet te ayuda a recuperar tus objetos perdidos o a devolver los que encuentres. Aquí tienes una guía rápida de los marcadores que ves en el mapa:"
+                android:textSize="14sp"
+                android:textColor="#5F6368"
+                android:layout_marginBottom="24dp"
+                android:lineSpacingExtra="4dp"/>
+
+            <!-- Guía de Marcadores -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Azul: Propios -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="8dp">
-
+                    android:layout_marginBottom="16dp">
                     <View
                         android:layout_width="12dp"
                         android:layout_height="12dp"
                         android:background="@drawable/circle_shape"
-                        android:backgroundTint="#2196F3"
-                        android:layout_marginEnd="8dp"/>
-
+                        android:backgroundTint="#1A73E8"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Mis Reportes"
-                        android:textSize="12sp"
-                        android:textColor="#333333"/>
+                        android:text="Marcadores Azules: Tus propios reportes."
+                        android:textSize="14sp"
+                        android:textColor="#202124"
+                        android:layout_marginStart="12dp"
+                        android:textStyle="bold"/>
                 </LinearLayout>
 
+                <!-- Rojo: Otros -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="8dp">
-
+                    android:layout_marginBottom="16dp">
                     <View
                         android:layout_width="12dp"
                         android:layout_height="12dp"
                         android:background="@drawable/circle_shape"
-                        android:backgroundTint="#D32F2F"
-                        android:layout_marginEnd="8dp"/>
-
+                        android:backgroundTint="#D93025"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Otros Usuarios"
-                        android:textSize="12sp"
-                        android:textColor="#333333"/>
+                        android:text="Marcadores Rojos: Reportes de otras personas."
+                        android:textSize="14sp"
+                        android:textColor="#202124"
+                        android:layout_marginStart="12dp"
+                        android:textStyle="bold"/>
                 </LinearLayout>
 
+                <!-- Verde: Puntos Seguros -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
-
                     <View
                         android:layout_width="12dp"
                         android:layout_height="12dp"
                         android:background="@drawable/circle_shape"
-                        android:backgroundTint="#4CAF50"
-                        android:layout_marginEnd="8dp"/>
-
+                        android:backgroundTint="#1E8E3E"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Puntos Seguros"
-                        android:textSize="12sp"
-                        android:textColor="#333333"/>
+                        android:text="Marcadores Verdes: Puntos seguros de entrega."
+                        android:textSize="14sp"
+                        android:textColor="#202124"
+                        android:layout_marginStart="12dp"
+                        android:textStyle="bold"/>
                 </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/layoutLogin"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#F5F7FA"
-            android:clickable="true"
-            android:focusable="true"
-            android:elevation="30dp"
-            android:visibility="gone"> <androidx.cardview.widget.CardView
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Los puntos seguros son lugares recomendados para encontrarte con otras personas o dejar objetos para que el dueño pase a recogerlos de forma segura."
+                    android:textSize="13sp"
+                    android:textColor="#5F6368"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginStart="24dp"
+                    android:lineSpacingExtra="2dp"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 7. OVERLAY LOGIN (visible solo si no hay sesión) -->
+    <!-- ─────────────────────────────────────────── -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutLogin"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F5F6FA"
+        android:clickable="true"
+        android:focusable="true"
+        android:elevation="30dp"
+        android:visibility="gone">
+
+        <androidx.cardview.widget.CardView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="32dp"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="10dp"
+            android:layout_marginHorizontal="24dp"
+            app:cardCornerRadius="28dp"
+            app:cardElevation="12dp"
             app:cardBackgroundColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -224,19 +610,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="32dp"
+                android:padding="36dp"
                 android:gravity="center_horizontal">
 
+                <!-- Logo circular -->
                 <androidx.cardview.widget.CardView
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    app:cardCornerRadius="20dp"
-                    app:cardBackgroundColor="#2563EB"
-                    app:cardElevation="0dp"
+                    android:layout_width="88dp"
+                    android:layout_height="88dp"
+                    app:cardCornerRadius="44dp"
+                    app:cardBackgroundColor="#1A73E8"
+                    app:cardElevation="8dp"
                     android:layout_marginBottom="24dp">
                     <ImageView
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
                         android:src="@drawable/logo"
                         app:tint="#FFFFFF"
                         android:layout_gravity="center"/>
@@ -246,26 +633,28 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Bienvenido a LostNet"
-                    android:textSize="22sp"
+                    android:textSize="24sp"
                     android:textStyle="bold"
-                    android:textColor="#1E293B"
+                    android:textColor="#1A1A1A"
                     android:layout_marginBottom="8dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="La plataforma inteligente para recuperar objetos perdidos.\nInicia sesión para continuar."
-                    android:textSize="12sp"
-                    android:textColor="#64748B"
+                    android:text="La plataforma inteligente para recuperar objetos perdidos."
+                    android:textSize="13sp"
+                    android:textColor="#5F6368"
                     android:gravity="center"
-                    android:layout_marginBottom="32dp"/>
+                    android:layout_marginBottom="36dp"
+                    android:lineSpacingExtra="3dp"/>
 
+                <!-- Botón Google -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/btnCustomGoogleLogin"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    app:cardCornerRadius="25dp"
-                    app:cardElevation="0dp"
+                    android:layout_height="54dp"
+                    app:cardCornerRadius="27dp"
+                    app:cardElevation="2dp"
                     android:foreground="?android:attr/selectableItemBackground"
                     android:clickable="true">
 
@@ -289,69 +678,38 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Continuar con Google"
-                            android:textColor="#374151"
+                            android:textColor="#1A1A1A"
                             android:textStyle="bold"
-                            android:textSize="14sp"/>
+                            android:textSize="15sp"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Acceso unificado con la Web"
-                    android:background="#F0F9FF"
-                    android:textColor="#0369A1"
+                    android:text="🔒  Acceso unificado con la Web"
+                    android:background="@drawable/bg_tag_pill"
+                    android:textColor="#1A73E8"
                     android:padding="12dp"
                     android:gravity="center"
-                    android:textSize="10sp"
+                    android:textSize="11sp"
                     android:textStyle="bold"
-                    android:layout_marginTop="24dp"
-                    android:backgroundTint="#F0F9FF"/> </LinearLayout>
+                    android:layout_marginTop="20dp"/>
+            </LinearLayout>
         </androidx.cardview.widget.CardView>
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-            android:id="@+id/fabReportar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="REPORTAR"
-            android:icon="@android:drawable/ic_input_add"
-            android:backgroundTint="#1565C0"
-            android:textColor="#FFF"
-            app:iconTint="#FFF"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            android:layout_marginBottom="32dp"/>
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabRefresh"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_popup_sync"
-            app:backgroundTint="#FFFFFF"
-            app:fabSize="mini"
-            android:contentDescription="Refrescar Mapa"
-
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="100dp" />
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
-
-    <com.google.android.material.navigation.NavigationView
-        android:id="@+id/nav_view"
-        android:layout_width="wrap_content"
+    <!-- ─────────────────────────────────────────── -->
+    <!-- 8. PANEL DE PERFIL (overlay, manejo desde código) -->
+    <!-- ─────────────────────────────────────────── -->
+    <FrameLayout
+        android:id="@+id/profilePanelOverlay"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="start"
-        android:fitsSystemWindows="true"
-        app:headerLayout="@layout/nav_header"
-        app:menu="@menu/drawer_menu" />
+        android:elevation="40dp"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="#66000000"/>
 
-</androidx.drawerlayout.widget.DrawerLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

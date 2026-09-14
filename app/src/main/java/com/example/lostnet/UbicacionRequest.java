@@ -1,15 +1,19 @@
 package com.example.lostnet;
 
+/** Cuerpo de la petición para actualizar la ubicación del usuario en el servidor. */
 public class UbicacionRequest {
-    private String email;
-    private double lat;
-    private double lon;
+
+    private final String email;
+    private final double lat;
+    private final double lon;
 
     public UbicacionRequest(String email, double lat, double lon) {
         this.email = email;
-        this.lat = lat;
-        this.lon = lon;
+        this.lat   = lat;
+        this.lon   = lon;
     }
 
-    // Getters y Setters (opcionales si usas Gson directo, pero buena práctica)
+    public String getEmail() { return email; }
+    public double getLat()   { return lat; }
+    public double getLon()   { return lon; }
 }

@@ -7,35 +7,39 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
+
 import java.util.List;
 
+/**
+ * Adaptador para mostrar la lista de reportes propios del usuario.
+ */
 public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHolder> {
 
-    private List<ReporteModelo> lista;
-    private OnItemClickListener listener;
-    private Context context;
-
-    // Tu IP correcta del APP-SERVER
-    private static final String BASE_URL = "http://10.155.13.137:5000";
-
-    public ReportesAdapter(List<ReporteModelo> lista, OnItemClickListener listener) {
-        this.lista = lista;
-        this.listener = listener;
-    }
-
+    /** Callbacks de interacción con cada ítem de la lista. */
     public interface OnItemClickListener {
         void onEliminarClick(String idReporte, int position);
-        void onItemClick(ReporteModelo reporte); // <--- NUEVO: Clic en la tarjeta
+        void onItemClick(ReporteModelo reporte);
+    }
+
+    private final List<ReporteModelo> lista;
+    private final OnItemClickListener listener;
+    private final Context context;
+
+    public ReportesAdapter(Context context, List<ReporteModelo> lista, OnItemClickListener listener) {
+        this.context  = context;
+        this.lista    = lista;
+        this.listener = listener;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        context = parent.getContext();
-        View view = LayoutInflater.from(context)
+        View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_reporte, parent, false);
         return new ViewHolder(view);
     }
@@ -44,47 +48,35 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         ReporteModelo reporte = lista.get(position);
 
-        // 1. Poner textos BÁSICOS
-        holder.txtDesc.setText(reporte.getDescription());
-        holder.txtStatus.setText("Estado: PERDIDO 🔴");
+        holder.txtDescripcion.setText(reporte.getDescription());
+        holder.txtEstado.setText("Estado: PERDIDO 🔴");
         holder.txtCategoria.setText("📂 " + (reporte.getCategory() != null ? reporte.getCategory() : "Otros"));
 
-        // 2. NUEVO: Mostrar Pregunta y Respuesta de Seguridad
-        // (Asegúrate que tu ReporteModelo tenga getSecurityQuestion() y getSecurityAnswer())
-        String preg = reporte.getSecurityQuestion();
-        String resp = reporte.getSecurityAnswer();
+        String pregunta = reporte.getSecurityQuestion();
+        String respuesta = reporte.getSecurityAnswer();
+        holder.txtPregunta.setText("🔒 P: " + (pregunta != null ? pregunta : "N/A"));
+        holder.txtRespuesta.setText("🔑 R: " + (respuesta != null ? respuesta : "N/A"));
 
-        holder.txtPregunta.setText("🔒 P: " + (preg != null ? preg : "N/A"));
-        holder.txtRespuesta.setText("🔑 R: " + (resp != null ? resp : "N/A"));
+        holder.txtIdOculto.setText(reporte.getId());
 
-        // 3. ID Oculto (o visible si quieres debug)
-        holder.txtId.setText(reporte.getId());
+        cargarImagen(holder.imgReporte, reporte.getPhotoUrl());
 
-        // 4. Cargar IMAGEN con Glide 📸
-        String rutaFoto = reporte.getPhotoUrl();
+        holder.btnEliminar.setOnClickListener(v -> listener.onEliminarClick(reporte.getId(), position));
+        holder.itemView.setOnClickListener(v -> listener.onItemClick(reporte));
+    }
 
+    private void cargarImagen(ImageView imageView, String rutaFoto) {
         if (rutaFoto != null && !rutaFoto.isEmpty()) {
-            // concatenamos: http://10.155... + /photos/img_...
-            String fullUrl = BASE_URL + rutaFoto;
-
+            String urlCompleta = AppConstants.BASE_URL + rutaFoto;
             Glide.with(context)
-                    .load(fullUrl)
+                    .load(urlCompleta)
                     .centerCrop()
                     .placeholder(android.R.drawable.ic_menu_camera)
                     .error(android.R.drawable.stat_notify_error)
-                    .into(holder.imgFoto);
+                    .into(imageView);
         } else {
-            // Imagen por defecto si no hay foto en el JSON
-            holder.imgFoto.setImageResource(android.R.drawable.ic_menu_gallery);
+            imageView.setImageResource(android.R.drawable.ic_menu_gallery);
         }
-
-        // 5. Listener del botón
-        holder.btnEliminar.setOnClickListener(v -> {
-            listener.onEliminarClick(reporte.getId(), position);
-        });
-        holder.itemView.setOnClickListener(v -> {
-            listener.onItemClick(reporte);
-        });
     }
 
     @Override
@@ -92,25 +84,26 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
         return lista.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView txtDesc, txtStatus, txtId;
-        TextView txtPregunta, txtRespuesta; // <--- NUEVOS CAMPOS
-        ImageView imgFoto;
-        TextView txtCategoria;
-        Button btnEliminar;
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        final TextView txtDescripcion;
+        final TextView txtEstado;
+        final TextView txtIdOculto;
+        final TextView txtPregunta;
+        final TextView txtRespuesta;
+        final TextView txtCategoria;
+        final ImageView imgReporte;
+        final Button btnEliminar;
 
-        public ViewHolder(@NonNull View itemView) {
+        ViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtDesc = itemView.findViewById(R.id.txtDescripcion);
-            txtStatus = itemView.findViewById(R.id.txtEstado);
-            txtId = itemView.findViewById(R.id.txtIdOculto);
-            imgFoto = itemView.findViewById(R.id.imgReporte);
-            btnEliminar = itemView.findViewById(R.id.btnEliminar);
-
-            // Vinculamos los nuevos TextViews del XML
-            txtPregunta = itemView.findViewById(R.id.txtPregunta);
-            txtRespuesta = itemView.findViewById(R.id.txtRespuesta);
-            txtCategoria = itemView.findViewById(R.id.txtCategoria);
+            txtDescripcion = itemView.findViewById(R.id.txtDescripcion);
+            txtEstado      = itemView.findViewById(R.id.txtEstado);
+            txtIdOculto    = itemView.findViewById(R.id.txtIdOculto);
+            imgReporte     = itemView.findViewById(R.id.imgReporte);
+            btnEliminar    = itemView.findViewById(R.id.btnEliminar);
+            txtPregunta    = itemView.findViewById(R.id.txtPregunta);
+            txtRespuesta   = itemView.findViewById(R.id.txtRespuesta);
+            txtCategoria   = itemView.findViewById(R.id.txtCategoria);
         }
     }
 }
