@@ -27,12 +27,18 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
     private final Context context;
     private final List<ReporteModelo> lista;
     private final OnReporteClickListener listener;
+    private List<String> idsConNovedad; // IDs que deben mostrar el punto rojo
     private static final String BASE_URL = AppConstants.BASE_URL;
 
     public ReportesGmapsAdapter(Context context, List<ReporteModelo> lista, OnReporteClickListener listener) {
         this.context = context;
         this.lista = lista;
         this.listener = listener;
+    }
+
+    public void setIdsConNovedad(List<String> ids) {
+        this.idsConNovedad = ids;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -77,9 +83,21 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
             holder.imgThumb.setImageResource(android.R.drawable.ic_menu_camera);
         }
 
+        // Punto de notificación (novedades)
+        if (idsConNovedad != null && idsConNovedad.contains(r.getId())) {
+            holder.dot.setVisibility(View.VISIBLE);
+        } else {
+            holder.dot.setVisibility(View.GONE);
+        }
+
         // Click
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) listener.onReporteClick(r);
+            if (listener != null) {
+                // Al hacer click, podríamos limpiar la "novedad" localmente
+                if (idsConNovedad != null) idsConNovedad.remove(r.getId());
+                holder.dot.setVisibility(View.GONE);
+                listener.onReporteClick(r);
+            }
         });
     }
 
@@ -91,6 +109,7 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imgThumb;
         TextView txtDesc, txtCatEstado, txtEstadoBadge;
+        View dot;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -98,6 +117,7 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
             txtDesc = itemView.findViewById(R.id.txtGmapsDesc);
             txtCatEstado = itemView.findViewById(R.id.txtGmapsCatEstado);
             txtEstadoBadge = itemView.findViewById(R.id.txtGmapsEstadoBadge);
+            dot = itemView.findViewById(R.id.dotNotificacion);
         }
     }
 }

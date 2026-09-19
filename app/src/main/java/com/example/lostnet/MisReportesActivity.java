@@ -26,7 +26,7 @@ import retrofit2.Response;
 public class MisReportesActivity extends AppCompatActivity {
 
     private RecyclerView recyclerMisReportes;
-    private ReportesAdapter adapter;
+    private ReportesGmapsAdapter adapter;
     private List<ReporteModelo> misReportesList;
     private LostNetApi apiService;
     private String myUserId;
@@ -68,14 +68,9 @@ public class MisReportesActivity extends AppCompatActivity {
                     }
                 }
 
-                adapter = new ReportesAdapter(MisReportesActivity.this, misReportesList, new ReportesAdapter.OnItemClickListener() {
+                adapter = new ReportesGmapsAdapter(MisReportesActivity.this, misReportesList, new ReportesGmapsAdapter.OnReporteClickListener() {
                     @Override
-                    public void onEliminarClick(String idReporte, int position) {
-                        eliminarReporte(idReporte, position);
-                    }
-
-                    @Override
-                    public void onItemClick(ReporteModelo reporte) {
+                    public void onReporteClick(ReporteModelo reporte) {
                         navegarAlMapa(reporte);
                     }
                 });

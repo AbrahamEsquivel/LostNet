@@ -217,6 +217,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 7. Configurar Google Sign In
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
+                .requestProfile()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
@@ -252,8 +253,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     // Opcional: Mostrar Toast
                     Toast.makeText(this, "Mostrando reporte seleccionado", Toast.LENGTH_SHORT).show();
 
-                    // Si quisieras abrir el PopUp automáticamente, tendrías que buscar el Marker
-                    // que tenga el tag con ese ID, pero con mover la cámara basta por ahora.
+                    // Buscar el objeto reporte para abrir el PopUp
+                    for (ReporteModelo r : listaReportesOriginal) {
+                        if (r.getId() != null && r.getId().equals(idDestino)) {
+                            mostrarPopUpDetalle(r);
+                            break;
+                        }
+                    }
                 }
             }, 1000); // 1 segundo de espera
         }
@@ -266,11 +272,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             // Cargar Foto en el Avatar de la barra de búsqueda
             ImageView imgAvatar = findViewById(R.id.imgAvatar);
-            if (account.getPhotoUrl() != null && imgAvatar != null) {
-                Glide.with(this)
-                        .load(account.getPhotoUrl())
-                        .circleCrop()
-                        .into(imgAvatar);
+            if (imgAvatar != null) {
+                Uri photoUri = account.getPhotoUrl();
+                if (photoUri != null) {
+                    Glide.with(this)
+                            .load(photoUri)
+                            .circleCrop()
+                            .into(imgAvatar);
+                } else {
+                    imgAvatar.setImageResource(android.R.drawable.ic_menu_myplaces);
+                }
             }
 
             // Si el panel de perfil ya está inflado, actualizarlo
@@ -339,11 +350,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (account.getDisplayName() != null) txtUser.setText(account.getDisplayName());
             if (account.getEmail() != null) txtEmail.setText(account.getEmail());
 
-            if (account.getPhotoUrl() != null && imgPerfil != null) {
-                Glide.with(this)
-                        .load(account.getPhotoUrl())
-                        .circleCrop()
-                        .into(imgPerfil);
+            if (imgPerfil != null) {
+                Uri photoUri = account.getPhotoUrl();
+                if (photoUri != null) {
+                    Glide.with(this)
+                            .load(photoUri)
+                            .circleCrop()
+                            .into(imgPerfil);
+                } else {
+                    imgPerfil.setImageResource(android.R.drawable.ic_menu_myplaces);
+                }
             }
         }
     }
@@ -442,8 +458,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     listaReportesOriginal = response.body();
                     // 2. Pintamos todo inicialmente
                     filtrarMapa("Todos");
-                    // 3. Cargar reportes cercanos en el BottomSheet
+                    // 3. Cargar reportes en las pestañas correspondientes
                     cargarExplorarCercanos();
+                    cargarMisReportesTab();
                 }
             }
             @Override
@@ -460,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String myEmail = (currentUser != null) ? currentUser.getEmail() : "";
 
         for (ReporteModelo r : listaReportesOriginal) {
-            // Filtrar: Que NO sea mío
+            // 1. Filtrar: Que NO sea mío
             if (myEmail != null && r.getEmail() != null && r.getEmail().equalsIgnoreCase(myEmail)) {
                 continue;
             }
@@ -472,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     results
             );
 
-            // Filtro: 2.5 km (2500 metros)
+            // 2. Filtro: 2.5 km (2500 metros)
             if (results[0] <= 2500) {
                 ajenosCercanos.add(r);
             }
@@ -508,7 +525,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         RecyclerView rv = findViewById(R.id.recyclerTu);
         if (rv != null) {
             rv.setLayoutManager(new LinearLayoutManager(this));
-            rv.setAdapter(new ReportesGmapsAdapter(this, misReportes, reporte -> {
+            ReportesGmapsAdapter adapter = new ReportesGmapsAdapter(this, misReportes, reporte -> {
                 if (sheetBehavior != null) {
                     sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
@@ -516,7 +533,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     LatLng pos = new LatLng(reporte.getLatitude(), reporte.getLongitude());
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 17));
                 }
-            }));
+            });
+            rv.setAdapter(adapter);
         }
     }
 
@@ -858,9 +876,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             try {
                 currentUser = task.getResult(ApiException.class);
 
-                // Guardar email en preferencias
+                // Guardar email y foto en preferencias
                 SharedPreferences prefs = getSharedPreferences("LostNetPrefs", MODE_PRIVATE);
-                prefs.edit().putString("email", currentUser.getEmail()).apply();
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("email", currentUser.getEmail());
+                if (currentUser.getPhotoUrl() != null) {
+                    editor.putString("photo_url", currentUser.getPhotoUrl().toString());
+                }
+                editor.apply();
 
                 // --- CORRECCIÓN AQUÍ ---
                 // Antes decías: iniciarMapa();
