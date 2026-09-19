@@ -72,6 +72,8 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
+import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.List;
 
@@ -755,6 +757,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                             }, 2000);
 
+                        } else if (response.code() == 400) {
+                            // Error de validación de imagen: parsear el motivo del servidor
+                            restaurarBoton(dialog);
+                            try {
+                                String errorJson = response.errorBody() != null ? response.errorBody().string() : "{}";
+                                JSONObject jsonObj = new JSONObject(errorJson);
+                                String motivo = jsonObj.optString("motivo", "Imagen no válida o sospechosa.");
+                                mostrarErrorImagen(motivo);
+                            } catch (Exception e) {
+                                mostrarErrorImagen("La imagen fue rechazada por el servidor.");
+                            }
                         } else {
                             restaurarBoton(dialog);
                             Toast.makeText(MainActivity.this, "Error servidor: " + response.code(), Toast.LENGTH_SHORT).show();
@@ -805,6 +818,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 btn.setText("PUBLICAR REPORTE");
             }
         }
+    }
+
+    /**
+     * Muestra un diálogo de error claro cuando el servidor rechaza la imagen.
+     * El parámetro 'motivo' viene directamente del campo JSON que devuelve el validador.
+     */
+    private void mostrarErrorImagen(String motivo) {
+        new AlertDialog.Builder(this)
+                .setTitle("⚠️ Imagen Rechazada")
+                .setMessage("El servidor detectó un problema con la imagen:\n\n" + motivo
+                        + "\n\nPor favor selecciona otra foto.")
+                .setPositiveButton("Entendido", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
     }
 
     private File comprimirImagen(File archivoOriginal) {
