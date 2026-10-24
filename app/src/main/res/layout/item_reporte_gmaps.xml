@@ -85,6 +85,17 @@
             android:textStyle="bold"
             android:textColor="#D93025"/>
 
+        <!-- Contador de caducidad (5 días) -->
+        <TextView
+            android:id="@+id/txtTiempoExpiry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="⏳ Se elimina en ..."
+            android:textSize="10sp"
+            android:textColor="#9AA0A6"
+            android:layout_marginTop="2dp"
+            android:visibility="gone"/>
+
     </LinearLayout>
 
     <!-- Flecha / chevron -->

@@ -723,14 +723,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             body = MultipartBody.Part.createFormData("foto", archivoAEnviar.getName(), reqFile);
         }
 
-        // Llamada a Retrofit (¡Asegúrate de que statusPart esté aquí adentro!)
-        apiService.enviarReporte(uidPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, sqPart, saPart, statusPart, body)
+          apiService.enviarReporte(uidPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, sqPart, saPart, statusPart, body)
                 .enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                         if (response.isSuccessful()) {
+                            // --- Parsear advertencias del servidor ---
+                            List<String> advertencias = new ArrayList<>();
+                            try {
+                                String rawBody = response.body() != null ? response.body().string() : "{}";
+                                JSONObject json = new JSONObject(rawBody);
+                                org.json.JSONArray arr = json.optJSONArray("advertencias");
+                                if (arr != null) {
+                                    for (int i = 0; i < arr.length(); i++) {
+                                        advertencias.add(arr.getString(i));
+                                    }
+                                }
+                            } catch (Exception ignored) {}
+
                             Toast.makeText(MainActivity.this, "¡Reporte enviado!", Toast.LENGTH_LONG).show();
                             dialog.dismiss();
+
+                            // Mostrar advertencias si las hay
+                            if (!advertencias.isEmpty()) {
+                                StringBuilder sb = new StringBuilder();
+                                for (String adv : advertencias) sb.append("⚠️ ").append(adv).append("\n");
+                                new AlertDialog.Builder(MainActivity.this)
+                                        .setTitle("⚠️ Aviso del servidor")
+                                        .setMessage(sb.toString().trim())
+                                        .setPositiveButton("Entendido", null)
+                                        .show();
+                            }
 
                             // --- CORRECCIÓN CLAVE: PINTAR PIN MANUALMENTE ---
                             try {
@@ -752,11 +775,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             new Handler().postDelayed(() -> {
                                 cargarReportes();
 
-                                // ¡AQUÍ ESTÁ LA LÍNEA NUEVA PARA EL RANGO EN TIEMPO REAL! 🏅
+                                // ¡AQUÍ ESTÁ LA LÍNEA NUEVA PARA EL RANGO EN TIEMPO REAL! 🎅
                                 cargarMedallaUsuario(email);
 
                             }, 2000);
 
+                        } else if (response.code() == 429) {
+                            // Límite diario de reportes alcanzado
+                            restaurarBoton(dialog);
+                            new AlertDialog.Builder(MainActivity.this)
+                                    .setTitle("🚫 Límite diario alcanzado")
+                                    .setMessage("Ya enviaste 5 reportes hoy.\nPuedes volver a reportar mañana.")
+                                    .setPositiveButton("Entendido", null)
+                                    .show();
                         } else if (response.code() == 400) {
                             // Error de validación de imagen: parsear el motivo del servidor
                             restaurarBoton(dialog);

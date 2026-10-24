@@ -64,4 +64,8 @@ public interface LostNetApi {
 
     @GET("usuario/tipo")
     Call<UsuarioGamificacion> obtenerTipoUsuario(@Query("email") String email);
+
+    /** Obtiene los reportes creados por un usuario específico (filtra en el servidor). */
+    @GET("mis-reportes")
+    Call<List<ReporteModelo>> obtenerMisReportes(@Query("user_id") String userId);
 }

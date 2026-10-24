@@ -37,6 +37,17 @@
                 android:text="ID: 000"
                 android:textSize="12sp"
                 android:textColor="@color/text_hint"/>
+
+            <TextView
+                android:id="@+id/txtTiempoExpiryAlerta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⏳ Se elimina en ..."
+                android:textSize="11sp"
+                android:textColor="#E67E00"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp"
+                android:visibility="gone"/>
         </LinearLayout>
 
     </LinearLayout>

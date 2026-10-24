@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Adapter para mostrar reportes en estilo Google Maps (bottom sheet).
@@ -28,12 +29,19 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
     private final List<ReporteModelo> lista;
     private final OnReporteClickListener listener;
     private List<String> idsConNovedad; // IDs que deben mostrar el punto rojo
+    private boolean mostrarExpiry = false; // true cuando se usa en MisReportes
     private static final String BASE_URL = AppConstants.BASE_URL;
 
     public ReportesGmapsAdapter(Context context, List<ReporteModelo> lista, OnReporteClickListener listener) {
         this.context = context;
         this.lista = lista;
         this.listener = listener;
+    }
+
+    /** Activa el contador de caducidad (usar solo en MisReportesActivity). */
+    public void setMostrarExpiry(boolean mostrar) {
+        this.mostrarExpiry = mostrar;
+        notifyDataSetChanged();
     }
 
     public void setIdsConNovedad(List<String> ids) {
@@ -90,6 +98,20 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
             holder.dot.setVisibility(View.GONE);
         }
 
+        // --- Contador de caducidad ---
+        if (mostrarExpiry && holder.txtTiempoExpiry != null) {
+            long epochSecs = r.getExpiresAtEpoch();
+            if (epochSecs > 0) {
+                String texto = tiempoRestante(epochSecs);
+                holder.txtTiempoExpiry.setText(texto);
+                holder.txtTiempoExpiry.setVisibility(View.VISIBLE);
+            } else {
+                holder.txtTiempoExpiry.setVisibility(View.GONE);
+            }
+        } else if (holder.txtTiempoExpiry != null) {
+            holder.txtTiempoExpiry.setVisibility(View.GONE);
+        }
+
         // Click
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
@@ -106,9 +128,24 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
         return lista.size();
     }
 
+    /**
+     * Calcula cuánto tiempo queda antes de que el reporte expire.
+     * Usa el Unix timestamp en segundos que devuelve el servidor.
+     */
+    private String tiempoRestante(long expiraEpochSegundos) {
+        long restanteMs = (expiraEpochSegundos * 1000L) - System.currentTimeMillis();
+        if (restanteMs <= 0) return "⚠️ Expira pronto";
+        long dias    = TimeUnit.MILLISECONDS.toDays(restanteMs);
+        long horas   = TimeUnit.MILLISECONDS.toHours(restanteMs)   % 24;
+        long minutos = TimeUnit.MILLISECONDS.toMinutes(restanteMs) % 60;
+        return dias > 0
+                ? "⏳ Se elimina en " + dias + "d " + horas + "h"
+                : "⏳ Se elimina en " + horas + "h " + minutos + "m";
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imgThumb;
-        TextView txtDesc, txtCatEstado, txtEstadoBadge;
+        TextView txtDesc, txtCatEstado, txtEstadoBadge, txtTiempoExpiry;
         View dot;
 
         ViewHolder(@NonNull View itemView) {
@@ -117,6 +154,7 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
             txtDesc = itemView.findViewById(R.id.txtGmapsDesc);
             txtCatEstado = itemView.findViewById(R.id.txtGmapsCatEstado);
             txtEstadoBadge = itemView.findViewById(R.id.txtGmapsEstadoBadge);
+            txtTiempoExpiry = itemView.findViewById(R.id.txtTiempoExpiry);
             dot = itemView.findViewById(R.id.dotNotificacion);
         }
     }

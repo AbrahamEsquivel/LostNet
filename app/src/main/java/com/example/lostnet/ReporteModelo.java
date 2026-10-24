@@ -41,6 +41,12 @@ public class ReporteModelo {
     @SerializedName("category")
     private String category;
 
+    @SerializedName("expires_at_epoch")
+    private long expiresAtEpoch;
+
+    @SerializedName("seconds_until_expiry")
+    private long secondsUntilExpiry;
+
     // --- Getters ---
 
     public String getId()               { return id; }
@@ -55,4 +61,6 @@ public class ReporteModelo {
     public String getEmail()            { return email; }
     public String getPhone()            { return phone; }
     public String getCategory()         { return category; }
+    public long getExpiresAtEpoch()     { return expiresAtEpoch; }
+    public long getSecondsUntilExpiry() { return secondsUntilExpiry; }
 }

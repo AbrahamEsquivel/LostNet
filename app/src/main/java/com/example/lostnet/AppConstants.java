@@ -7,10 +7,10 @@ package com.example.lostnet;
 public final class AppConstants {
 
     /** URL base del servidor LostNet (para archivos estáticos). */
-    public static final String BASE_URL = "http://10.147.20.62:5000/";
+    public static final String BASE_URL = "https://lostnet-api.tail0e8b19.ts.net/";
 
     /** URL base de la API. */
-    public static final String API_BASE_URL = "http://10.147.20.62:5000/api/";
+    public static final String API_BASE_URL = "https://lostnet-api.tail0e8b19.ts.net/api/";
 
     /** Nombre del archivo de SharedPreferences de la app. */
     public static final String PREFS_NAME = "LostNetPrefs";

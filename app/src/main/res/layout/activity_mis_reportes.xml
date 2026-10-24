@@ -30,6 +30,19 @@
             android:layout_height="wrap_content"/>
     </LinearLayout>
 
+    <!-- Barra de límite diario de reportes -->
+    <TextView
+        android:id="@+id/txtLimiteDiario"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:textSize="13sp"
+        android:fontFamily="sans-serif-medium"
+        android:visibility="gone"
+        android:background="#F1F3F4"
+        android:text="📋 0/5 reportes hoy"/>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerMisReportes"
         android:layout_width="match_parent"

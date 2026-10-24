@@ -12,9 +12,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Adaptador para mostrar la lista de alertas de proximidad en un RecyclerView.
+ * Muestra el mensaje, fecha y tiempo restante antes de que el reporte expire.
  */
 public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHolder> {
 
@@ -50,6 +52,24 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
         SimpleDateFormat formato = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
         holder.txtFecha.setText("Fecha: " + formato.format(fecha));
 
+        // --- Tiempo restante del reporte referenciado ---
+        if (holder.txtTiempoExpiry != null) {
+            long ahoraSegundos = System.currentTimeMillis() / 1000L;
+            long segundosRestantes = alerta.getSecondsUntilExpiry();
+
+            // Fallback: calcular desde expires_at_epoch si secondsUntilExpiry no viene
+            if (segundosRestantes <= 0 && alerta.getExpiresAtEpoch() > 0) {
+                segundosRestantes = alerta.getExpiresAtEpoch() - ahoraSegundos;
+            }
+
+            if (segundosRestantes > 0) {
+                holder.txtTiempoExpiry.setText(formatearTiempoRestante(segundosRestantes));
+                holder.txtTiempoExpiry.setVisibility(View.VISIBLE);
+            } else {
+                holder.txtTiempoExpiry.setVisibility(View.GONE);
+            }
+        }
+
         holder.itemView.setOnClickListener(v -> listener.onAlertaClick(alerta));
     }
 
@@ -58,14 +78,30 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
         return listaAlertas.size();
     }
 
+    /** Convierte segundos restantes en texto legible. */
+    private String formatearTiempoRestante(long segundos) {
+        long dias    = TimeUnit.SECONDS.toDays(segundos);
+        long horas   = TimeUnit.SECONDS.toHours(segundos)   % 24;
+        long minutos = TimeUnit.SECONDS.toMinutes(segundos) % 60;
+        if (dias > 0) {
+            return "⏳ El reporte se elimina en " + dias + "d " + horas + "h";
+        } else if (horas > 0) {
+            return "⏳ El reporte se elimina en " + horas + "h " + minutos + "m";
+        } else {
+            return "⚠️ El reporte expira muy pronto";
+        }
+    }
+
     static class ViewHolder extends RecyclerView.ViewHolder {
         final TextView txtMensaje;
         final TextView txtFecha;
+        final TextView txtTiempoExpiry;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
-            txtMensaje = itemView.findViewById(R.id.txtMensajeAlerta);
-            txtFecha   = itemView.findViewById(R.id.txtFechaAlerta);
+            txtMensaje      = itemView.findViewById(R.id.txtMensajeAlerta);
+            txtFecha        = itemView.findViewById(R.id.txtFechaAlerta);
+            txtTiempoExpiry = itemView.findViewById(R.id.txtTiempoExpiryAlerta);
         }
     }
-}
+}

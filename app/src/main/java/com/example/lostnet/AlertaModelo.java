@@ -23,6 +23,12 @@ public class AlertaModelo {
     @SerializedName("lon_objeto")
     private double lonObjeto;
 
+    @SerializedName("expires_at_epoch")
+    private long expiresAtEpoch;
+
+    @SerializedName("seconds_until_expiry")
+    private long secondsUntilExpiry;
+
     // --- Getters ---
 
     public String getId()        { return id; }
@@ -31,4 +37,6 @@ public class AlertaModelo {
     public boolean isRead()      { return read; }
     public double getLatObjeto() { return latObjeto; }
     public double getLonObjeto() { return lonObjeto; }
+    public long getExpiresAtEpoch()     { return expiresAtEpoch; }
+    public long getSecondsUntilExpiry() { return secondsUntilExpiry; }
 }
