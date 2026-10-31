@@ -80,16 +80,7 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
 
     /** Convierte segundos restantes en texto legible. */
     private String formatearTiempoRestante(long segundos) {
-        long dias    = TimeUnit.SECONDS.toDays(segundos);
-        long horas   = TimeUnit.SECONDS.toHours(segundos)   % 24;
-        long minutos = TimeUnit.SECONDS.toMinutes(segundos) % 60;
-        if (dias > 0) {
-            return "⏳ El reporte se elimina en " + dias + "d " + horas + "h";
-        } else if (horas > 0) {
-            return "⏳ El reporte se elimina en " + horas + "h " + minutos + "m";
-        } else {
-            return "⚠️ El reporte expira muy pronto";
-        }
+        return LostNetUtils.textoExpiracionAlerta(segundos);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -104,4 +95,4 @@ public class AlertasAdapter extends RecyclerView.Adapter<AlertasAdapter.ViewHold
             txtTiempoExpiry = itemView.findViewById(R.id.txtTiempoExpiryAlerta);
         }
     }
-}
+}

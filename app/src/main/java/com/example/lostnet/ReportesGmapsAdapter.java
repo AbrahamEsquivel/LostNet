@@ -133,14 +133,7 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
      * Usa el Unix timestamp en segundos que devuelve el servidor.
      */
     private String tiempoRestante(long expiraEpochSegundos) {
-        long restanteMs = (expiraEpochSegundos * 1000L) - System.currentTimeMillis();
-        if (restanteMs <= 0) return "⚠️ Expira pronto";
-        long dias    = TimeUnit.MILLISECONDS.toDays(restanteMs);
-        long horas   = TimeUnit.MILLISECONDS.toHours(restanteMs)   % 24;
-        long minutos = TimeUnit.MILLISECONDS.toMinutes(restanteMs) % 60;
-        return dias > 0
-                ? "⏳ Se elimina en " + dias + "d " + horas + "h"
-                : "⏳ Se elimina en " + horas + "h " + minutos + "m";
+        return LostNetUtils.textoExpiracionReporte(expiraEpochSegundos, System.currentTimeMillis());
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

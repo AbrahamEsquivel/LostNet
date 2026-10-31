@@ -1,0 +1,150 @@
+# Pipeline CI de la app Android de LostNet
+# Codificación continua (lint) · Integración continua (pruebas) · Pruebas continuas · Lanzamiento (APK)
+name: CI Android LostNet
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 1) Análisis estático con Android Lint
+  analisis-estatico:
+    name: Análisis estático (Android Lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Configurar Gradle (con caché)
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Permiso de ejecución a gradlew
+        run: chmod +x gradlew
+
+      - name: Ejecutar Android Lint
+        run: ./gradlew lintDebug --stacktrace
+
+      - name: Publicar reporte de Lint
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-lint
+          path: app/build/reports/lint-results-debug.*
+          if-no-files-found: warn
+
+  # 2) Análisis de vulnerabilidades del código y dependencias (Trivy)
+  vulnerabilidades:
+    name: Análisis de vulnerabilidades (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código
+        uses: actions/checkout@v4
+
+      - name: Escanear dependencias y secretos
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret
+          severity: CRITICAL,HIGH
+          format: table
+          output: trivy-android.txt
+          exit-code: '0'
+
+      - name: Mostrar resultado
+        if: always()
+        run: cat trivy-android.txt || true
+
+      - name: Publicar reporte de vulnerabilidades
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-vulnerabilidades
+          path: trivy-android.txt
+
+  # 3) Pruebas unitarias (lógica pura en la JVM)
+  pruebas-unitarias:
+    name: Pruebas unitarias
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+
+      - name: Ejecutar pruebas unitarias
+        run: ./gradlew testDebugUnitTest --tests "com.example.lostnet.LostNetUtilsTest" --tests "com.example.lostnet.ExampleUnitTest"
+
+      - name: Publicar resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pruebas-unitarias
+          path: app/build/reports/tests/testDebugUnitTest/
+
+  # 4) Pruebas de integración (Retrofit + Gson contra MockWebServer)
+  pruebas-integracion:
+    name: Pruebas de integración (MockWebServer)
+    runs-on: ubuntu-latest
+    needs: [pruebas-unitarias]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+
+      - name: Ejecutar pruebas de integración
+        run: ./gradlew testDebugUnitTest --tests "com.example.lostnet.LostNetApiIntegrationTest"
+
+      - name: Publicar resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pruebas-integracion
+          path: app/build/reports/tests/testDebugUnitTest/
+
+  # 5) Empaquetado: genera el APK (Lanzamiento continuo)
+  empaquetado:
+    name: Empaquetado (APK)
+    runs-on: ubuntu-latest
+    needs: [analisis-estatico, vulnerabilidades, pruebas-integracion]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+
+      - name: Compilar APK
+        run: ./gradlew assembleDebug
+
+      - name: Publicar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lostnet-apk-${{ github.sha }}
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 30

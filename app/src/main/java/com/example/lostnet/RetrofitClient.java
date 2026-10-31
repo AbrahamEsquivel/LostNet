@@ -21,12 +21,22 @@ public final class RetrofitClient {
      */
     public static Retrofit getClient() {
         if (retrofitInstance == null) {
-            retrofitInstance = new Retrofit.Builder()
-                    .baseUrl(AppConstants.API_BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
+            retrofitInstance = construirRetrofit(AppConstants.API_BASE_URL);
         }
         return retrofitInstance;
+    }
+
+    /** Construye un cliente Retrofit para la URL indicada (usado también por las pruebas). */
+    static Retrofit construirRetrofit(String baseUrl) {
+        return new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+    }
+
+    /** Crea el servicio de API apuntando a la URL indicada (usado por las pruebas de integración). */
+    static LostNetApi crearApi(String baseUrl) {
+        return construirRetrofit(baseUrl).create(LostNetApi.class);
     }
 
     /**

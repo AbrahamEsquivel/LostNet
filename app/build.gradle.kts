@@ -30,6 +30,18 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    // Pruebas unitarias en la JVM: los métodos de Android devuelven valores por defecto
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
+    // El pipeline publica el reporte de lint como artefacto sin detener el build
+    lint {
+        abortOnError = false
+        htmlReport = true
+        xmlReport = true
+    }
 }
 
 dependencies {
@@ -39,6 +51,8 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
     testImplementation(libs.junit)
+    // Servidor HTTP falso para las pruebas de integración de la API (misma versión de OkHttp que usa Retrofit 2.9.0)
+    testImplementation("com.squareup.okhttp3:mockwebserver:3.14.9")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 

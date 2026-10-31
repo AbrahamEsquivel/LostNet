@@ -95,13 +95,7 @@ public class MisReportesActivity extends AppCompatActivity {
                             "Error servidor: " + response.code(), Toast.LENGTH_SHORT).show();
                     return;
                 }
-                List<ReporteModelo> filtrados = new ArrayList<>();
-                for (ReporteModelo r : response.body()) {
-                    if (r.getUserId() != null && r.getUserId().equals(myUserId)) {
-                        filtrados.add(r);
-                    }
-                }
-                procesarListaReportes(filtrados);
+                procesarListaReportes(LostNetUtils.filtrarPorUsuario(response.body(), myUserId));
             }
 
             @Override
@@ -218,4 +212,4 @@ public class MisReportesActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-}
+}

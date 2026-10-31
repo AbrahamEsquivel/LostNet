@@ -475,27 +475,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void cargarExplorarCercanos() {
         if (userLocation == null || listaReportesOriginal.isEmpty()) return;
 
-        List<ReporteModelo> ajenosCercanos = new ArrayList<>();
         String myEmail = (currentUser != null) ? currentUser.getEmail() : "";
-
-        for (ReporteModelo r : listaReportesOriginal) {
-            // 1. Filtrar: Que NO sea mío
-            if (myEmail != null && r.getEmail() != null && r.getEmail().equalsIgnoreCase(myEmail)) {
-                continue;
-            }
-
-            float[] results = new float[1];
-            Location.distanceBetween(
-                    userLocation.getLatitude(), userLocation.getLongitude(),
-                    r.getLatitude(), r.getLongitude(),
-                    results
-            );
-
-            // 2. Filtro: 2.5 km (2500 metros)
-            if (results[0] <= 2500) {
-                ajenosCercanos.add(r);
-            }
-        }
+        // Reportes de otros usuarios a 2.5 km o menos
+        List<ReporteModelo> ajenosCercanos = LostNetUtils.filtrarAjenosCercanos(
+                listaReportesOriginal, myEmail,
+                userLocation.getLatitude(), userLocation.getLongitude());
 
         RecyclerView rv = findViewById(R.id.recyclerExplorar);
         if (rv != null) {
@@ -551,14 +535,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // 3. Ahora sí, pintamos los reportes según el filtro (Rojos y Azules)
         for (ReporteModelo rep : listaReportesOriginal) {
-            String catReporte = rep.getCategory() != null ? rep.getCategory() : "Otros";
-            boolean mostrar = false;
-
-            if (categoriaFiltro.equals("Todos")) {
-                mostrar = true;
-            } else if (catReporte.equalsIgnoreCase(categoriaFiltro)) {
-                mostrar = true;
-            }
+            boolean mostrar = LostNetUtils.coincideCategoria(rep.getCategory(), categoriaFiltro);
 
             if (mostrar) {
                 LatLng pos = new LatLng(rep.getLatitude(), rep.getLongitude());
@@ -1227,14 +1204,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void abrirWhatsApp(String telefono, String objeto) {
         try {
             // Limpieza básica del número
-            String numeroLimpio = telefono.replaceAll("\\s+", "").replaceAll("-", "");
-
-            // Asumimos lada 52 (México) si no la trae
-            if (!numeroLimpio.startsWith("+") && !numeroLimpio.startsWith("52")) {
-                numeroLimpio = "52" + numeroLimpio;
-            }
-            // WhatsApp API requiere solo números, sin el +
-            numeroLimpio = numeroLimpio.replace("+", "");
+            String numeroLimpio = LostNetUtils.numeroWhatsApp(telefono);
 
             String mensaje = "Hola, vi en LostNet que perdiste tu *" + objeto + "*. ¡Creo que yo lo encontré! ¿Dónde nos vemos?";
             String url = "https://api.whatsapp.com/send?phone=" + numeroLimpio + "&text=" + URLEncoder.encode(mensaje, "UTF-8");
@@ -1288,29 +1258,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private String enmascararEmail(String email) {
-        if (email == null || email.isEmpty()) return "Sin Email";
-        if (!email.contains("@")) return email; // Si no tiene arroba, no lo tocamos
-
-        String[] partes = email.split("@");
-        String nombre = partes[0];
-        String dominio = partes[1];
-
-        // Si el nombre es largo (ej. "josimar"), dejamos "jos***"
-        // Si es corto (ej. "yo"), dejamos "***"
-        if (nombre.length() > 3) {
-            return nombre.substring(0, 3) + "***@" + dominio;
-        } else {
-            return "***@" + dominio;
-        }
+        return LostNetUtils.enmascararEmail(email);
     }
 
     private String enmascararTelefono(String phone) {
-        if (phone == null || phone.isEmpty()) return "Sin Teléfono";
-        // Dejamos los primeros 2 dígitos y los últimos 2 visibles
-        if (phone.length() > 4) {
-            return phone.substring(0, 2) + "****" + phone.substring(phone.length() - 2);
-        }
-        return "****";
+        return LostNetUtils.enmascararTelefono(phone);
     }
 
     private void cargarMedallaUsuario(String emailUsuario) {
