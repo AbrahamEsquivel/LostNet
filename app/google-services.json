@@ -7,12 +7,25 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:770683038158:android:fa21d9c8c84f0f6ffc639f",
+        "mobilesdk_app_id": "1:770683038158:android:7449e53642d7d29cfc639f",
         "android_client_info": {
           "package_name": "com.example.lostnet"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "770683038158-slm2bb1sbtvmrlmsmnirsuv3v03ermnd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.lostnet",
+            "certificate_hash": "e4b639570851da21cc8b6a033981a09c54cea742"
+          }
+        },
+        {
+          "client_id": "770683038158-7c53b3odm77q44vvt6uhqbkvt1au49pl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDk01rLmzRaKLRDWHBhwvnn2i9yIDHNoPA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "770683038158-7c53b3odm77q44vvt6uhqbkvt1au49pl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
