@@ -1147,6 +1147,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
         }
 
+        // --- NUEVO: Abrir Perfil Público desde la tarjeta de contacto o correo ---
+        View cardContacto = view.findViewById(R.id.cardContacto);
+        TextView btnVerPerfil = view.findViewById(R.id.btnVerPerfilPublico);
+
+        View.OnClickListener abrirPerfilListener = v -> {
+            Intent intent = new Intent(MainActivity.this, PerfilPublicoActivity.class);
+            intent.putExtra(PerfilPublicoActivity.EXTRA_USER_ID, reporte.getUserId());
+            intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, reporte.getEmail());
+            startActivity(intent);
+        };
+
+        if (cardContacto != null) cardContacto.setOnClickListener(abrirPerfilListener);
+        if (btnVerPerfil != null) btnVerPerfil.setOnClickListener(abrirPerfilListener);
+        txtEmail.setOnClickListener(abrirPerfilListener);
+
         // --- E. LÓGICA DE COMENTARIOS (EL MURO) ---
         recyclerComents.setLayoutManager(new LinearLayoutManager(this));
 
