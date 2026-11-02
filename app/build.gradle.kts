@@ -17,6 +17,18 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Llave de firma compartida por el equipo y el pipeline.
+    // Su SHA-1 está registrada en Firebase, así cualquier APK de debug puede iniciar sesión con Google.
+    // (Solo para desarrollo/escuela; para publicar en Play Store se usaría una llave privada aparte.)
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("lostnet-debug.jks")
+            storePassword = "lostnet-debug"
+            keyAlias = "lostnet"
+            keyPassword = "lostnet-debug"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
