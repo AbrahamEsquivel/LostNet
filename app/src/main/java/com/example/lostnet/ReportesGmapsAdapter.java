@@ -1,6 +1,7 @@
 package com.example.lostnet;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -111,6 +112,14 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
         } else if (holder.txtTiempoExpiry != null) {
             holder.txtTiempoExpiry.setVisibility(View.GONE);
         }
+
+        // Click en el avatar / imagen del reporte para abrir su Perfil Público
+        holder.imgThumb.setOnClickListener(v -> {
+            Intent intent = new Intent(context, PerfilPublicoActivity.class);
+            intent.putExtra(PerfilPublicoActivity.EXTRA_USER_ID, r.getUserId());
+            intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, r.getEmail());
+            context.startActivity(intent);
+        });
 
         // Click
         holder.itemView.setOnClickListener(v -> {
