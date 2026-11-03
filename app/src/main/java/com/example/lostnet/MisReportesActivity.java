@@ -24,7 +24,7 @@ import retrofit2.Response;
 /**
  * Muestra la lista de reportes creados por el usuario activo.
  * Incluye:
- *  - Contador de caducidad (los reportes se eliminan automáticamente en 5 días).
+ *  - Cuenta regresiva de vigencia (10 dias) enviada por el servidor.
  *  - Indicador del límite diario de 5 reportes.
  */
 public class MisReportesActivity extends AppCompatActivity {
@@ -116,7 +116,7 @@ public class MisReportesActivity extends AppCompatActivity {
 
         adapter = new ReportesGmapsAdapter(this, misReportesList,
                 reporte -> navegarAlMapa(reporte));
-        adapter.setMostrarExpiry(true); // activa el countdown de 5 días
+        adapter.setMostrarExpiry(true); // usa dias_restantes del servidor
         recyclerMisReportes.setAdapter(adapter);
 
         actualizarBarraLimiteDiario();
@@ -126,46 +126,12 @@ public class MisReportesActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Muestra cuántos reportes envió el usuario hoy.
-     * Un reporte creado hoy tiene secondsUntilExpiry > 4 días (>345,600 s),
-     * porque el servidor asigna exactamente 5 días de vida al crear.
-     * Si secondsUntilExpiry == 0 usamos expires_at_epoch como respaldo.
-     */
+    /** Muestra la regla del servidor; el conteo real se valida al publicar. */
     private void actualizarBarraLimiteDiario() {
         if (txtLimiteDiario == null) return;
-
-        long ahoraSegundos = System.currentTimeMillis() / 1000L;
-        // Umbral: reporte creado hoy → le quedan > 4 días
-        final long CUATRO_DIAS_SEG = 4L * 24 * 60 * 60;
-
-        int reportesHoy = 0;
-        for (ReporteModelo r : misReportesList) {
-            long segundosRestantes = r.getSecondsUntilExpiry();
-
-            // Si el servidor no mandó secondsUntilExpiry, lo calculamos
-            if (segundosRestantes <= 0 && r.getExpiresAtEpoch() > 0) {
-                segundosRestantes = r.getExpiresAtEpoch() - ahoraSegundos;
-            }
-
-            if (segundosRestantes > CUATRO_DIAS_SEG) {
-                reportesHoy++;
-            }
-        }
-
         txtLimiteDiario.setVisibility(View.VISIBLE);
-        if (reportesHoy >= LIMITE_DIARIO) {
-            txtLimiteDiario.setText(
-                    "🚫 Límite diario alcanzado (" + LIMITE_DIARIO + "/" + LIMITE_DIARIO
-                            + " reportes). Vuelve mañana.");
-            txtLimiteDiario.setTextColor(0xFFD93025);
-        } else {
-            int restantes = LIMITE_DIARIO - reportesHoy;
-            txtLimiteDiario.setText(
-                    "📋 " + reportesHoy + "/" + LIMITE_DIARIO
-                            + " reportes hoy  ·  Te quedan " + restantes);
-            txtLimiteDiario.setTextColor(0xFF137333);
-        }
+        txtLimiteDiario.setText("M\u00e1ximo 5 reportes en las \u00faltimas 24 horas");
+        txtLimiteDiario.setTextColor(0xFF137333);
     }
 
     // ─────────────────────────────────────────────────────────────

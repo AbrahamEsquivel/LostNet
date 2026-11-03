@@ -47,6 +47,9 @@ public class ReporteModelo {
     @SerializedName("seconds_until_expiry")
     private long secondsUntilExpiry;
 
+    @SerializedName("dias_restantes")
+    private Integer diasRestantes;
+
     // --- Getters ---
 
     public String getId()               { return id; }
@@ -63,4 +66,6 @@ public class ReporteModelo {
     public String getCategory()         { return category; }
     public long getExpiresAtEpoch()     { return expiresAtEpoch; }
     public long getSecondsUntilExpiry() { return secondsUntilExpiry; }
+    public int getDiasRestantes()        { return diasRestantes != null ? diasRestantes : 10; }
+    public void setDiasRestantes(Integer diasRestantes) { this.diasRestantes = diasRestantes; }
 }
