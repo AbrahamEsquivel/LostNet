@@ -55,6 +55,21 @@
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- Recompensa Badge -->
+                <TextView
+                    android:id="@+id/txtDetalleRecompensa"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎁 Recompensa: $500"
+                    android:background="@drawable/bg_badge_sabueso"
+                    android:textColor="@color/white"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="5dp"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
                     android:layout_marginBottom="18dp"/>
 
                 <!-- Card contacto -->

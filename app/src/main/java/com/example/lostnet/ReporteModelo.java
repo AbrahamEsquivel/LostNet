@@ -47,6 +47,9 @@ public class ReporteModelo {
     @SerializedName("seconds_until_expiry")
     private long secondsUntilExpiry;
 
+    @SerializedName("recompensa")
+    private String recompensa;
+
     // --- Getters ---
 
     public String getId()               { return id; }
@@ -63,4 +66,5 @@ public class ReporteModelo {
     public String getCategory()         { return category; }
     public long getExpiresAtEpoch()     { return expiresAtEpoch; }
     public long getSecondsUntilExpiry() { return secondsUntilExpiry; }
+    public String getRecompensa()       { return recompensa; }
 }

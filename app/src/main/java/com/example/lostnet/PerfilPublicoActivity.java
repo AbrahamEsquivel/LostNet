@@ -95,9 +95,9 @@ public class PerfilPublicoActivity extends AppCompatActivity {
         }
         txtNombrePublico.setText(nombreUsuario);
 
-        // Cargar imagen de avatar predeterminada o avatar simulado de alta calidad
+        // Cargar imagen de avatar predeterminada o avatar simulado de alta calidad (Fondo Teal / Accent)
         Glide.with(this)
-                .load("https://ui-avatars.com/api/?name=" + nombreUsuario + "&background=6C63FF&color=fff&size=256")
+                .load("https://ui-avatars.com/api/?name=" + nombreUsuario + "&background=00B894&color=fff&size=256")
                 .placeholder(android.R.drawable.ic_menu_camera)
                 .error(android.R.drawable.ic_menu_camera)
                 .circleCrop()
