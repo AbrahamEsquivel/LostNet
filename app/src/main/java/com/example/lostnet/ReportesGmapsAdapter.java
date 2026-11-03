@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Adapter para mostrar reportes en estilo Google Maps (bottom sheet).
@@ -100,14 +99,15 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
 
         // --- Contador de caducidad ---
         if (mostrarExpiry && holder.txtTiempoExpiry != null) {
-            long epochSecs = r.getExpiresAtEpoch();
-            if (epochSecs > 0) {
-                String texto = tiempoRestante(epochSecs);
-                holder.txtTiempoExpiry.setText(texto);
-                holder.txtTiempoExpiry.setVisibility(View.VISIBLE);
+            int dias = r.getDiasRestantes();
+            if (dias <= 0) {
+                holder.txtTiempoExpiry.setText("Expirado");
+            } else if (dias == 1) {
+                holder.txtTiempoExpiry.setText("Te queda 1 d\u00eda");
             } else {
-                holder.txtTiempoExpiry.setVisibility(View.GONE);
+                holder.txtTiempoExpiry.setText("Te quedan " + dias + " d\u00edas");
             }
+            holder.txtTiempoExpiry.setVisibility(View.VISIBLE);
         } else if (holder.txtTiempoExpiry != null) {
             holder.txtTiempoExpiry.setVisibility(View.GONE);
         }
@@ -126,14 +126,6 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
     @Override
     public int getItemCount() {
         return lista.size();
-    }
-
-    /**
-     * Calcula cuánto tiempo queda antes de que el reporte expire.
-     * Usa el Unix timestamp en segundos que devuelve el servidor.
-     */
-    private String tiempoRestante(long expiraEpochSegundos) {
-        return LostNetUtils.textoExpiracionReporte(expiraEpochSegundos, System.currentTimeMillis());
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
