@@ -288,6 +288,45 @@
     <!-- 6. BOTTOM SHEET DESLIZABLE con 3 secciones  -->
     <!-- ─────────────────────────────────────────── -->
     <LinearLayout
+        android:id="@+id/zoomControls"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_gravity="bottom|start"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="100dp"
+        android:elevation="8dp">
+
+        <ImageButton
+            android:id="@+id/btnZoomIn"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_fab_white"
+            android:src="@drawable/ic_zoom_in"
+            android:padding="12dp"
+            android:contentDescription="Acercar mapa"
+            android:elevation="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackgroundBorderless" />
+
+        <ImageButton
+            android:id="@+id/btnZoomOut"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_fab_white"
+            android:src="@drawable/ic_zoom_out"
+            android:padding="12dp"
+            android:contentDescription="Alejar mapa"
+            android:elevation="4dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackgroundBorderless" />
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/bottomSheet"
         android:layout_width="match_parent"
         android:layout_height="520dp"

@@ -49,6 +49,8 @@ public class ReporteModelo {
 
     @SerializedName("recompensa")
     private String recompensa;
+    @SerializedName("dias_restantes")
+    private Integer diasRestantes;
 
     // --- Getters ---
 
@@ -67,4 +69,7 @@ public class ReporteModelo {
     public long getExpiresAtEpoch()     { return expiresAtEpoch; }
     public long getSecondsUntilExpiry() { return secondsUntilExpiry; }
     public String getRecompensa()       { return recompensa; }
+}
+    public int getDiasRestantes()        { return diasRestantes != null ? diasRestantes : 10; }
+    public void setDiasRestantes(Integer diasRestantes) { this.diasRestantes = diasRestantes; }
 }
