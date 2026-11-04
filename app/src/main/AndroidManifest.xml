@@ -54,6 +54,7 @@
         <activity android:name=".NotificacionesActivity" />
         <activity android:name=".CreditsActivity" />
         <activity android:name=".AboutActivity" />
+        <activity android:name=".PerfilPublicoActivity" />
 
     </application>
 

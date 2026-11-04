@@ -48,6 +48,7 @@ public interface LostNetApi {
             @Part("security_question") RequestBody securityQuestion,
             @Part("security_answer")   RequestBody securityAnswer,
             @Part("status")           RequestBody status,
+            @Part("recompensa")       RequestBody recompensa,
             @Part MultipartBody.Part  foto
     );
 

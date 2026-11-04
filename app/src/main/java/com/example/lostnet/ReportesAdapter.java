@@ -1,6 +1,7 @@
 package com.example.lostnet;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -60,6 +61,14 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
         holder.txtIdOculto.setText(reporte.getId());
 
         cargarImagen(holder.imgReporte, reporte.getPhotoUrl());
+
+        // Al presionar la imagen / avatar del reporte, abrir su Perfil Público
+        holder.imgReporte.setOnClickListener(v -> {
+            Intent intent = new Intent(context, PerfilPublicoActivity.class);
+            intent.putExtra(PerfilPublicoActivity.EXTRA_USER_ID, reporte.getUserId());
+            intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, reporte.getEmail());
+            context.startActivity(intent);
+        });
 
         holder.btnEliminar.setOnClickListener(v -> listener.onEliminarClick(reporte.getId(), position));
         holder.itemView.setOnClickListener(v -> listener.onItemClick(reporte));

@@ -739,6 +739,75 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
         }
 
+        // --- LÓGICA DE RECOMPENSA ---
+        SwitchMaterial switchRecompensa = view.findViewById(R.id.switchRecompensa);
+        android.widget.LinearLayout layoutMontosRecomendados = view.findViewById(R.id.layoutMontosRecomendados);
+        com.google.android.material.textfield.TextInputEditText etMonto = view.findViewById(R.id.etMontoRecompensa);
+        ChipGroup chipGroupRecompensas = view.findViewById(R.id.chipGroupRecompensas);
+
+        if (switchRecompensa != null && layoutMontosRecomendados != null && etMonto != null) {
+            switchRecompensa.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    layoutMontosRecomendados.setVisibility(View.VISIBLE);
+                } else {
+                    layoutMontosRecomendados.setVisibility(View.GONE);
+                    if (etMonto.getText() != null) {
+                        etMonto.getText().clear();
+                    }
+                    if (chipGroupRecompensas != null) {
+                        chipGroupRecompensas.clearCheck();
+                    }
+                }
+            });
+        }
+
+        // Lógica de los chips para llenar automáticamente el monto
+        if (chipGroupRecompensas != null && etMonto != null) {
+            
+            // Bandera para evitar bucles infinitos al limpiar/setear
+            final boolean[] isProgrammaticUpdate = {false};
+            
+            chipGroupRecompensas.setOnCheckedChangeListener((group, checkedId) -> {
+                if (isProgrammaticUpdate[0]) return;
+                
+                if (checkedId == R.id.chipRec50) {
+                    isProgrammaticUpdate[0] = true;
+                    etMonto.setText("50");
+                    isProgrammaticUpdate[0] = false;
+                } else if (checkedId == R.id.chipRec100) {
+                    isProgrammaticUpdate[0] = true;
+                    etMonto.setText("100");
+                    isProgrammaticUpdate[0] = false;
+                } else if (checkedId == R.id.chipRec500) {
+                    isProgrammaticUpdate[0] = true;
+                    etMonto.setText("500");
+                    isProgrammaticUpdate[0] = false;
+                } else if (checkedId == R.id.chipRec1000) {
+                    isProgrammaticUpdate[0] = true;
+                    etMonto.setText("1000");
+                    isProgrammaticUpdate[0] = false;
+                }
+            });
+
+            // Si el usuario escribe a mano en el campo, quitamos la selección de los chips
+            etMonto.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                @Override
+                public void afterTextChanged(android.text.Editable s) {
+                    if (!isProgrammaticUpdate[0]) {
+                        isProgrammaticUpdate[0] = true;
+                        chipGroupRecompensas.clearCheck();
+                        isProgrammaticUpdate[0] = false;
+                    }
+                }
+            });
+        }
+
         // Resetear foto temporal al abrir el dialog
         photoFile = null;
         imgPreviewRef.setVisibility(View.GONE);
@@ -777,6 +846,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Si el switch está encendido, es FOUND (Encontrado). Si no, es LOST (Perdido).
             String statusReporte = (switchTipo != null && switchTipo.isChecked()) ? "FOUND" : "LOST";
 
+            // Extraer la recompensa si aplica
+            String recompensaFinal = "0";
+            if (switchRecompensa != null && switchRecompensa.isChecked() && etMonto != null) {
+                String monto = etMonto.getText().toString().trim();
+                if (!monto.isEmpty()) {
+                    recompensaFinal = monto;
+                }
+            }
+
             // 2. Bloquear botón para evitar doble envío
             btnEnviar.setEnabled(false);
             btnEnviar.setText("ENVIANDO...");
@@ -792,7 +870,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     String.valueOf(centro.longitude),
                     etSecQ.getText().toString(),
                     etSecA.getText().toString(),
-                    statusReporte, // <--- Pasamos el nuevo dato aquí
+                    statusReporte, 
+                    recompensaFinal, // <--- Nueva variable recompensa
                     dialog,
                     fotoFinal // Pasamos null si no hay foto
             );
@@ -813,7 +892,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // --- MÉTODO CORE DE ENVÍO (PROTEGIDO CONTRA NULL) ---
     private void enviarDatosAlServidor(String uid, String email, String phone, String desc,
                                        String cat, String latStr, String lonStr, String sq, String sa,
-                                       String statusReporte, // <--- Acepta el String aquí
+                                       String statusReporte, String recompensa,
                                        AlertDialog dialog, @Nullable File archivoAEnviar) {
 
         // 1. Convertimos todo a RequestBody (Texto)
@@ -829,6 +908,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // --- Convertimos el status (FOUND/LOST) para enviarlo ---
         RequestBody statusPart = RequestBody.create(MediaType.parse("text/plain"), statusReporte);
+        RequestBody recompensaPart = RequestBody.create(MediaType.parse("text/plain"), recompensa);
 
         MultipartBody.Part body = null;
         if (archivoAEnviar != null) {
@@ -836,7 +916,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             body = MultipartBody.Part.createFormData("foto", archivoAEnviar.getName(), reqFile);
         }
 
-          apiService.enviarReporte(uidPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, sqPart, saPart, statusPart, body)
+          apiService.enviarReporte(uidPart, emailPart, phonePart, descPart, catPart, latPart, lonPart, sqPart, saPart, statusPart, recompensaPart, body)
                 .enqueue(new Callback<ResponseBody>() {
                     @Override
                     public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -1217,6 +1297,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Concatenamos el estatus con la categoría
         String catTexto = reporte.getCategory() != null ? reporte.getCategory() : "General";
         txtCat.setText(estadoVisual + "  |  " + catTexto);
+        
+        // --- MOSTRAR RECOMPENSA (Si hay) ---
+        TextView txtRecompensa = view.findViewById(R.id.txtDetalleRecompensa);
+        if (reporte.getRecompensa() != null && !reporte.getRecompensa().equals("0") && !reporte.getRecompensa().isEmpty()) {
+            txtRecompensa.setVisibility(View.VISIBLE);
+            txtRecompensa.setText("🎁 Recompensa: $" + reporte.getRecompensa());
+        } else {
+            txtRecompensa.setVisibility(View.GONE);
+        }
+        
         // La pregunta la dejamos visible siempre
         txtPregunta.setText("P: " + (reporte.getSecurityQuestion() != null ? reporte.getSecurityQuestion() : "N/A"));
 
@@ -1328,6 +1418,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             });
         }
+
+        // --- NUEVO: Abrir Perfil Público desde la tarjeta de contacto o correo ---
+        View cardContacto = view.findViewById(R.id.cardContacto);
+        TextView btnVerPerfil = view.findViewById(R.id.btnVerPerfilPublico);
+
+        View.OnClickListener abrirPerfilListener = v -> {
+            Intent intent = new Intent(MainActivity.this, PerfilPublicoActivity.class);
+            intent.putExtra(PerfilPublicoActivity.EXTRA_USER_ID, reporte.getUserId());
+            intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, reporte.getEmail());
+            startActivity(intent);
+        };
+
+        if (cardContacto != null) cardContacto.setOnClickListener(abrirPerfilListener);
+        if (btnVerPerfil != null) btnVerPerfil.setOnClickListener(abrirPerfilListener);
+        txtEmail.setOnClickListener(abrirPerfilListener);
 
         // --- E. LÓGICA DE COMENTARIOS (EL MURO) ---
         recyclerComents.setLayoutManager(new LinearLayoutManager(this));

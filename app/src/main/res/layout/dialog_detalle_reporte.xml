@@ -55,25 +55,61 @@
                     android:textSize="24sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- Recompensa Badge -->
+                <TextView
+                    android:id="@+id/txtDetalleRecompensa"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎁 Recompensa: $500"
+                    android:background="@drawable/bg_badge_sabueso"
+                    android:textColor="@color/white"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="5dp"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
                     android:layout_marginBottom="18dp"/>
 
                 <!-- Card contacto -->
                 <LinearLayout
+                    android:id="@+id/cardContacto"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_input_dark"
                     android:padding="16dp"
-                    android:layout_marginBottom="16dp">
+                    android:layout_marginBottom="16dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="?android:attr/selectableItemBackground">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="👤  Contacto"
-                        android:textStyle="bold"
-                        android:textColor="@color/primary"
-                        android:textSize="12sp"
-                        android:layout_marginBottom="6dp"/>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="6dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="👤  Contacto de la Comunidad"
+                            android:textStyle="bold"
+                            android:textColor="@color/primary"
+                            android:textSize="12sp"/>
+
+                        <TextView
+                            android:id="@+id/btnVerPerfilPublico"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Ver Perfil ➔"
+                            android:textColor="@color/primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"/>
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/txtDetalleEmail"
