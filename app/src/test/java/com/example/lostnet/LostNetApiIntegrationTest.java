@@ -151,15 +151,15 @@ public class LostNetApiIntegrationTest {
         Response<ResponseBody> resp = api.enviarReporte(
                 texto("u1"), texto("a@uaa.mx"), texto("4491234567"), texto("Cartera café"),
                 texto("Carteras"), texto("21.91"), texto("-102.31"),
-                texto("¿Color?"), texto("café"), texto("lost"), foto).execute();
-
+                texto("¿Color?"), texto("café"), texto("lost"), texto("$100"), foto).execute();
         RecordedRequest req = siguientePeticion();
         assertEquals("POST", req.getMethod());
         assertEquals("/api/reportar", req.getPath());
         assertTrue(req.getHeader("Content-Type").startsWith("multipart/form-data"));
         String cuerpo = req.getBody().readUtf8();
         String[] campos = {"user_id", "email", "phone", "description", "category",
-                "latitude", "longitude", "security_question", "security_answer", "status"};
+                "latitude", "longitude", "security_question", "security_answer", "status",
+                "recompensa"};
         for (String campo : campos) {
             assertTrue("Falta el campo " + campo, cuerpo.contains("name=\"" + campo + "\""));
         }
@@ -174,7 +174,7 @@ public class LostNetApiIntegrationTest {
 
         Response<ResponseBody> resp = api.enviarReporte(
                 texto("u1"), texto("a@uaa.mx"), texto("1"), texto("x"), texto("Otros"),
-                texto("0"), texto("0"), texto("q"), texto("a"), texto("lost"), null).execute();
+                texto("0"), texto("0"), texto("q"), texto("a"), texto("lost"), texto(""), null).execute();
 
         assertFalse(resp.isSuccessful());
         assertEquals(429, resp.code());
