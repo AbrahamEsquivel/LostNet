@@ -2,6 +2,7 @@ package com.example.lostnet;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -34,6 +35,9 @@ public class PerfilPublicoActivity extends AppCompatActivity {
     private TextView txtReportesExitosos;
     private TextView txtDevoluciones;
     private TextView txtAntiguedad;
+    private TextView badgeLogro1;
+    private TextView badgeLogro2;
+    private TextView badgeLogro3;
     private ImageButton btnVolver;
     private Button btnCerrarPerfil;
 
@@ -66,6 +70,9 @@ public class PerfilPublicoActivity extends AppCompatActivity {
         txtReportesExitosos = findViewById(R.id.txtReportesExitosos);
         txtDevoluciones = findViewById(R.id.txtDevoluciones);
         txtAntiguedad = findViewById(R.id.txtAntiguedad);
+        badgeLogro1 = findViewById(R.id.badgeLogro1);
+        badgeLogro2 = findViewById(R.id.badgeLogro2);
+        badgeLogro3 = findViewById(R.id.badgeLogro3);
         btnVolver = findViewById(R.id.btnVolver);
         btnCerrarPerfil = findViewById(R.id.btnCerrarPerfil);
     }
@@ -103,71 +110,83 @@ public class PerfilPublicoActivity extends AppCompatActivity {
                 .circleCrop()
                 .into(imgAvatarPublico);
 
-        // Consultar el tipo de usuario (gamificación) al backend si tenemos el correo
-        if (email != null && !email.isEmpty() && apiService != null) {
-            apiService.obtenerTipoUsuario(email).enqueue(new Callback<UsuarioGamificacion>() {
+        // Honor y estadísticas reales calculados por el servidor
+        mostrarCargando();
+        if (email != null && !email.isEmpty() && !email.contains("*") && apiService != null) {
+            apiService.obtenerPerfilPublico(email).enqueue(new Callback<PerfilPublicoModelo>() {
                 @Override
-                public void onResponse(Call<UsuarioGamificacion> call, Response<UsuarioGamificacion> response) {
+                public void onResponse(Call<PerfilPublicoModelo> call, Response<PerfilPublicoModelo> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        String tipo = response.body().getTipo();
-                        aplicarGamificacion(tipo);
+                        aplicarGamificacion(response.body());
                     } else {
-                        aplicarGamificacion("BUSCADOR");
+                        Log.w("PerfilPublico", "Perfil no disponible: HTTP " + response.code());
+                        mostrarSinDatos();
                     }
                 }
 
                 @Override
-                public void onFailure(Call<UsuarioGamificacion> call, Throwable t) {
-                    Log.e("PerfilPublico", "Error al obtener tipo de usuario: " + t.getMessage());
-                    aplicarGamificacion("BUSCADOR");
+                public void onFailure(Call<PerfilPublicoModelo> call, Throwable t) {
+                    Log.e("PerfilPublico", "Error al obtener el perfil público: " + t.getMessage());
+                    mostrarSinDatos();
                 }
             });
         } else {
-            aplicarGamificacion("BUSCADOR");
+            mostrarSinDatos();
         }
     }
 
-    private void aplicarGamificacion(String tipo) {
-        if (tipo == null) tipo = "BUSCADOR";
+    private void mostrarCargando() {
+        txtNivelHonor.setText("Calculando honor…");
+        txtConfianzaPorcentaje.setText("…");
+        progressConfianza.setProgress(0);
+        txtReportesExitosos.setText("…");
+        txtDevoluciones.setText("…");
+        txtAntiguedad.setText("…");
+        marcarLogros(null);
+    }
 
-        String nivelHonorText;
+    /** Sin conexión o sin datos: no se muestran cifras inventadas. */
+    private void mostrarSinDatos() {
+        txtNivelHonor.setText(LostNetUtils.textoNivelHonor("BUSCADOR"));
+        txtNivelHonor.setBackgroundResource(R.drawable.bg_badge_buscador);
+        txtConfianzaPorcentaje.setText("—");
+        progressConfianza.setProgress(0);
+        txtReportesExitosos.setText("—");
+        txtDevoluciones.setText("—");
+        txtAntiguedad.setText("—");
+        marcarLogros(null);
+    }
+
+    private void aplicarGamificacion(PerfilPublicoModelo perfil) {
+        String rol = perfil.getRol();
         int badgeBackgroundRes = R.drawable.bg_badge_buscador;
-        int porcentajeConfianza = 95;
-        int reportesExitosos = 10;
-        int devoluciones = 6;
-        String antiguedad = "4m";
-
-        if (tipo.equalsIgnoreCase("SABUESO")) {
-            nivelHonorText = "🕵️‍♂️ Sabueso Comunitario (Héroe Local)";
+        if (rol.equalsIgnoreCase("SABUESO")) {
             badgeBackgroundRes = R.drawable.bg_badge_sabueso;
-            porcentajeConfianza = 99;
-            reportesExitosos = 24;
-            devoluciones = 18;
-            antiguedad = "1 año";
-        } else if (tipo.equalsIgnoreCase("PERDEDOR")) {
-            nivelHonorText = "🤦‍♂️ En búsqueda activa (Novato)";
+        } else if (rol.equalsIgnoreCase("PERDEDOR")) {
             badgeBackgroundRes = R.drawable.bg_badge_perdedor;
-            porcentajeConfianza = 88;
-            reportesExitosos = 3;
-            devoluciones = 1;
-            antiguedad = "1m";
-        } else {
-            nivelHonorText = "🔍 Buscador Confiable";
-            badgeBackgroundRes = R.drawable.bg_badge_buscador;
-            porcentajeConfianza = 95;
-            reportesExitosos = 12;
-            devoluciones = 8;
-            antiguedad = "6m";
         }
 
-        txtNivelHonor.setText(nivelHonorText);
+        txtNivelHonor.setText(LostNetUtils.textoNivelHonor(rol));
         txtNivelHonor.setBackgroundResource(badgeBackgroundRes);
 
-        txtConfianzaPorcentaje.setText(porcentajeConfianza + "%");
-        progressConfianza.setProgress(porcentajeConfianza);
+        int confianza = perfil.getConfianza();
+        txtConfianzaPorcentaje.setText(confianza + "%");
+        progressConfianza.setProgress(confianza);
 
-        txtReportesExitosos.setText(String.valueOf(reportesExitosos));
-        txtDevoluciones.setText(String.valueOf(devoluciones));
-        txtAntiguedad.setText(antiguedad);
+        txtReportesExitosos.setText(String.valueOf(perfil.getReportesPublicados()));
+        txtDevoluciones.setText(String.valueOf(perfil.getObjetosEncontrados()));
+        txtAntiguedad.setText(LostNetUtils.textoAntiguedad(perfil.getDiasEnLostnet()));
+        marcarLogros(perfil);
+    }
+
+    /** Los logros desbloqueados se ven completos; los bloqueados, atenuados. */
+    private void marcarLogros(PerfilPublicoModelo perfil) {
+        aplicarLogro(badgeLogro1, perfil != null && perfil.tieneLogro("SABUESO"));
+        aplicarLogro(badgeLogro2, perfil != null && perfil.tieneLogro("DEVOLVEDOR"));
+        aplicarLogro(badgeLogro3, perfil != null && perfil.tieneLogro("VERIFICADO"));
+    }
+
+    private void aplicarLogro(View badge, boolean desbloqueado) {
+        if (badge != null) badge.setAlpha(desbloqueado ? 1f : 0.3f);
     }
 }

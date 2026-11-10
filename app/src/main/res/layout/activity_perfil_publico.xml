@@ -173,7 +173,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:text="Basado en reportes validados y devoluciones comunitarias sin incidencias."
+                    android:text="Sube con objetos encontrados y baja con denuncias recibidas o reportes en revisión."
                     android:textColor="@color/text_secondary"
                     android:textSize="12sp" />
 
@@ -221,7 +221,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:gravity="center"
-                        android:text="Reportes\nExitosos"
+                        android:text="Reportes\nPublicados"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
 
@@ -260,7 +260,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:gravity="center"
-                        android:text="Objetos\nDevueltos"
+                        android:text="Objetos\nEncontrados"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
 
@@ -299,7 +299,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:gravity="center"
-                        android:text="Antigüedad\nComunidad"
+                        android:text="En\nLostNet"
                         android:textColor="@color/text_secondary"
                         android:textSize="11sp" />
 
