@@ -11,7 +11,6 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
-import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
@@ -36,7 +35,6 @@ public interface LostNetApi {
     @POST("comentar")
     Call<Void> enviarComentario(@Body HashMap<String, Object> body);
 
-    @Headers("Connection: close")
     @Multipart
     @POST("reportar")
     Call<ResponseBody> enviarReporte(
@@ -56,6 +54,9 @@ public interface LostNetApi {
 
     @DELETE("reportes/{id}")
     Call<ResponseBody> borrarReporte(@Path("id") String id);
+
+    @POST("reportes/{id}/denunciar")
+    Call<ResponseBody> denunciarReporte(@Path("id") String id, @Body HashMap<String, String> body);
 
     @POST("actualizar-ubicacion")
     Call<Void> actualizarUbicacion(@Body UbicacionRequest request);

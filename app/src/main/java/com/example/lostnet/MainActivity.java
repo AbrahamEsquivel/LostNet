@@ -10,12 +10,17 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -70,8 +75,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.json.JSONObject;
 import java.util.HashMap;
@@ -104,6 +113,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // Datos y Filtros
     private List<ReporteModelo> listaReportesOriginal = new ArrayList<>(); // Copia para filtrar localmente
+    private String consultaBusqueda = "";
+    private String categoriaFiltroActual = "Todos";
+    private final Handler searchHandler = new Handler(Looper.getMainLooper());
+    private final ExecutorService geocoderExecutor = Executors.newSingleThreadExecutor();
+    private final List<Marker> marcadoresReportes = new ArrayList<>();
+    private Runnable geocodificacionPendiente;
+    private int generacionBusqueda = 0;
     private List<PuntoSeguroModelo> listaPuntosSeguros = new ArrayList<>();
     private Location userLocation;
 
@@ -197,8 +213,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             else filtrarMapa("Todos");
         });
 
+        EditText etBusqueda = findViewById(R.id.etBusqueda);
+        etBusqueda.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                consultaBusqueda = s != null ? s.toString() : "";
+                filtrarMapa(categoriaFiltroActual);
+                programarGeocodificacion(consultaBusqueda);
+            }
+        });
+
         // 6. Configurar Botón Reportar (FAB)
         findViewById(R.id.fabReportar).setOnClickListener(v -> mostrarDialogoReporte());
+
+        findViewById(R.id.btnZoomIn).setOnClickListener(v -> {
+            if (mMap != null) mMap.animateCamera(CameraUpdateFactory.zoomIn());
+        });
+        findViewById(R.id.btnZoomOut).setOnClickListener(v -> {
+            if (mMap != null) mMap.animateCamera(CameraUpdateFactory.zoomOut());
+        });
 
         // 6.5 Configurar Botón Mi Ubicación (FAB)
         findViewById(R.id.fabMiUbicacion).setOnClickListener(v -> {
@@ -212,7 +246,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
             } else {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 999);
+                ActivityCompat.requestPermissions(this, new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                }, 999);
             }
         });
 
@@ -394,11 +431,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Desactivar UI por defecto de Google Maps
         mMap.getUiSettings().setCompassEnabled(false);
-        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.getUiSettings().setZoomControlsEnabled(false);
+        mMap.getUiSettings().setMyLocationButtonEnabled(
+                tienePermisoUbicacion()
+        );
         mMap.getUiSettings().setMapToolbarEnabled(false); // También quita botones de "Abrir en Maps"
 
         // --- LÓGICA DE UBICACIÓN REAL ---
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (tienePermisoUbicacion()) {
 
             // 1. Activar el puntito azul en el mapa
             mMap.setMyLocationEnabled(true);
@@ -432,7 +472,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         } else {
             // Si no hay permiso, lo pedimos (Código 999)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 999);
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            }, 999);
         }
 
         mMap.setOnMarkerClickListener(marker -> {
@@ -441,10 +484,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             if (tag != null && tag instanceof ReporteModelo) {
                 ReporteModelo reporteSeleccionado = (ReporteModelo) tag;
+                navegarAReporte(reporteSeleccionado);
                 mostrarPopUpDetalle(reporteSeleccionado); // Llamamos a la función del paso 3
             }
 
-            return false; // false = permite que el mapa siga haciendo su zoom default al pin
+            return false;
         });
 
         cargarReportes();
@@ -456,55 +500,51 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(Call<List<ReporteModelo>> call, Response<List<ReporteModelo>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // 1. Guardamos la lista original para poder filtrar después
                     listaReportesOriginal = response.body();
-                    // 2. Pintamos todo inicialmente
-                    filtrarMapa("Todos");
-                    // 3. Cargar reportes en las pestañas correspondientes
-                    cargarExplorarCercanos();
-                    cargarMisReportesTab();
+                    filtrarMapa(categoriaFiltroActual);
+                } else {
+                    Toast.makeText(MainActivity.this,
+                            "No se pudieron cargar los reportes (" + response.code() + ")",
+                            Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(Call<List<ReporteModelo>> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Error de red", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Error de red al cargar reportes", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void cargarExplorarCercanos() {
-        if (userLocation == null || listaReportesOriginal.isEmpty()) return;
-
-        String myEmail = (currentUser != null) ? currentUser.getEmail() : "";
-        // Reportes de otros usuarios a 2.5 km o menos
-        List<ReporteModelo> ajenosCercanos = LostNetUtils.filtrarAjenosCercanos(
-                listaReportesOriginal, myEmail,
-                userLocation.getLatitude(), userLocation.getLongitude());
+        List<ReporteModelo> reportesVisibles = obtenerReportesFiltrados();
+        String myEmail = currentUser != null ? currentUser.getEmail() : "";
+        List<ReporteModelo> reportesLista = userLocation != null
+                ? LostNetUtils.filtrarAjenosCercanos(reportesVisibles, myEmail,
+                    userLocation.getLatitude(), userLocation.getLongitude())
+                : reportesVisibles;
 
         RecyclerView rv = findViewById(R.id.recyclerExplorar);
         if (rv != null) {
             rv.setLayoutManager(new LinearLayoutManager(this));
-            rv.setAdapter(new ReportesGmapsAdapter(this, ajenosCercanos, reporte -> {
+            rv.setAdapter(new ReportesGmapsAdapter(this, reportesLista, reporte -> {
                 if (sheetBehavior != null) {
                     sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
-                if (mMap != null) {
-                    LatLng pos = new LatLng(reporte.getLatitude(), reporte.getLongitude());
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 17));
-                }
+                navegarAReporte(reporte);
             }));
         }
     }
 
     private void cargarMisReportesTab() {
-        if (listaReportesOriginal.isEmpty() || currentUser == null) return;
-
         List<ReporteModelo> misReportes = new ArrayList<>();
-        String myEmail = currentUser.getEmail();
+        String myEmail = currentUser != null ? currentUser.getEmail() : null;
 
-        for (ReporteModelo r : listaReportesOriginal) {
-            if (myEmail != null && r.getEmail() != null && r.getEmail().equalsIgnoreCase(myEmail)) {
-                misReportes.add(r);
+        if (myEmail != null) {
+            for (ReporteModelo reporte : obtenerReportesFiltrados()) {
+                if (reporte.getEmail() != null && reporte.getEmail().equalsIgnoreCase(myEmail)) {
+                    misReportes.add(reporte);
+                }
             }
         }
 
@@ -515,48 +555,144 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (sheetBehavior != null) {
                     sheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
-                if (mMap != null) {
-                    LatLng pos = new LatLng(reporte.getLatitude(), reporte.getLongitude());
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(pos, 17));
-                }
+                navegarAReporte(reporte);
             });
             rv.setAdapter(adapter);
         }
     }
 
     private void filtrarMapa(String categoriaFiltro) {
-        if (mMap == null) return;
+        categoriaFiltroActual = categoriaFiltro != null ? categoriaFiltro : "Todos";
+        List<ReporteModelo> reportesVisibles = obtenerReportesFiltrados();
 
-        // 1. Borramos TODO (Rojos, Azules y Verdes)
-        mMap.clear();
+        if (mMap != null) {
+            mMap.clear();
+            marcadoresReportes.clear();
+            pintarPuntosSegurosEnMapa();
 
-        // 2. ¡RESTAURAMOS LOS VERDES INMEDIATAMENTE! (La solución)
-        pintarPuntosSegurosEnMapa();
+            for (ReporteModelo reporte : reportesVisibles) {
+                LatLng pos = new LatLng(reporte.getLatitude(), reporte.getLongitude());
+                boolean esPropio = currentUser != null && reporte.getEmail() != null
+                        && reporte.getEmail().equalsIgnoreCase(currentUser.getEmail());
+                float colorPin = esPropio
+                        ? BitmapDescriptorFactory.HUE_AZURE
+                        : BitmapDescriptorFactory.HUE_RED;
 
-        // 3. Ahora sí, pintamos los reportes según el filtro (Rojos y Azules)
-        for (ReporteModelo rep : listaReportesOriginal) {
-            boolean mostrar = LostNetUtils.coincideCategoria(rep.getCategory(), categoriaFiltro);
-
-            if (mostrar) {
-                LatLng pos = new LatLng(rep.getLatitude(), rep.getLongitude());
-
-                float colorPin;
-                if (currentUser != null && rep.getEmail() != null &&
-                        rep.getEmail().equals(currentUser.getEmail())) {
-                    colorPin = BitmapDescriptorFactory.HUE_AZURE; // Míos (Azul)
-                } else {
-                    colorPin = BitmapDescriptorFactory.HUE_RED; // Otros (Rojo)
+                Marker marker = mMap.addMarker(new MarkerOptions()
+                        .position(pos)
+                        .title(reporte.getDescription())
+                        .icon(BitmapDescriptorFactory.defaultMarker(colorPin)));
+                if (marker != null) {
+                    marker.setTag(reporte);
+                    marcadoresReportes.add(marker);
                 }
-
-                Marker marker = mMap.addMarker(
-                        new MarkerOptions()
-                                .position(pos)
-                                .title(rep.getDescription())
-                                .icon(BitmapDescriptorFactory.defaultMarker(colorPin))
-                );
-                marker.setTag(rep);
             }
         }
+
+        cargarExplorarCercanos();
+        cargarMisReportesTab();
+    }
+
+    private List<ReporteModelo> obtenerReportesFiltrados() {
+        List<ReporteModelo> filtrados = new ArrayList<>();
+        String query = normalizarTexto(consultaBusqueda);
+
+        for (ReporteModelo reporte : listaReportesOriginal) {
+            if (reporte == null
+                    || !LostNetUtils.coincideCategoria(reporte.getCategory(), categoriaFiltroActual)) {
+                continue;
+            }
+            if (query.isEmpty()
+                    || normalizarTexto(reporte.getDescription()).contains(query)
+                    || normalizarTexto(reporte.getCategory()).contains(query)) {
+                filtrados.add(reporte);
+            }
+        }
+        return filtrados;
+    }
+
+    private String normalizarTexto(String texto) {
+        if (texto == null) return "";
+        return Normalizer.normalize(texto.trim(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase(Locale.ROOT);
+    }
+
+    private void navegarAReporte(ReporteModelo reporte) {
+        if (mMap == null || reporte == null) return;
+
+        LatLng ubicacion = new LatLng(reporte.getLatitude(), reporte.getLongitude());
+        Marker marcador = encontrarMarcador(reporte);
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(ubicacion, 16f),
+                new GoogleMap.CancelableCallback() {
+                    @Override
+                    public void onFinish() {
+                        if (marcador != null) marcador.showInfoWindow();
+                    }
+
+                    @Override
+                    public void onCancel() {}
+                });
+    }
+
+    private Marker encontrarMarcador(ReporteModelo reporte) {
+        for (Marker marcador : marcadoresReportes) {
+            Object tag = marcador.getTag();
+            if (tag == reporte) return marcador;
+            if (tag instanceof ReporteModelo) {
+                String idReporte = reporte.getId();
+                String idMarcador = ((ReporteModelo) tag).getId();
+                if (idReporte != null && idReporte.equals(idMarcador)) return marcador;
+            }
+        }
+        return null;
+    }
+
+    private void programarGeocodificacion(String query) {
+        generacionBusqueda++;
+        int generacionActual = generacionBusqueda;
+        if (geocodificacionPendiente != null) searchHandler.removeCallbacks(geocodificacionPendiente);
+
+        String consulta = query != null ? query.trim() : "";
+        if (consulta.length() < 3 || !obtenerReportesFiltrados().isEmpty()) return;
+
+        geocodificacionPendiente = () -> geocoderExecutor.execute(() -> {
+            try {
+                if (!Geocoder.isPresent()) return;
+                Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
+                List<Address> direcciones = geocoder.getFromLocationName(consulta, 1);
+                if (direcciones == null || direcciones.isEmpty()) return;
+
+                Address direccion = direcciones.get(0);
+                if (!direccion.hasLatitude() || !direccion.hasLongitude()) return;
+                LatLng destino = new LatLng(direccion.getLatitude(), direccion.getLongitude());
+                runOnUiThread(() -> {
+                    if (isFinishing() || isDestroyed() || generacionActual != generacionBusqueda
+                            || !normalizarTexto(consulta).equals(normalizarTexto(consultaBusqueda))
+                            || !obtenerReportesFiltrados().isEmpty() || mMap == null) {
+                        return;
+                    }
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(destino, 15f));
+                });
+            } catch (IOException | IllegalArgumentException e) {
+                Log.d("GEOCODER", "No se pudo resolver la bÃºsqueda como direcciÃ³n", e);
+            }
+        });
+        searchHandler.postDelayed(geocodificacionPendiente, 700);
+    }
+
+    private boolean tienePermisoUbicacion() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (geocodificacionPendiente != null) searchHandler.removeCallbacks(geocodificacionPendiente);
+        geocoderExecutor.shutdownNow();
+        super.onDestroy();
     }
 
     // --- LÓGICA FORMULARIO Y CÁMARA ---
@@ -838,20 +974,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }, 2000);
 
                         } else if (response.code() == 429) {
-                            // Límite diario de reportes alcanzado
                             restaurarBoton(dialog);
-                            new AlertDialog.Builder(MainActivity.this)
-                                    .setTitle("🚫 Límite diario alcanzado")
-                                    .setMessage("Ya enviaste 5 reportes hoy.\nPuedes volver a reportar mañana.")
-                                    .setPositiveButton("Entendido", null)
-                                    .show();
+                            Toast.makeText(MainActivity.this,
+                                    "Has alcanzado el l\u00edmite de 5 reportes en las \u00faltimas 24 horas",
+                                    Toast.LENGTH_LONG).show();
                         } else if (response.code() == 400) {
                             // Error de validación de imagen: parsear el motivo del servidor
                             restaurarBoton(dialog);
                             try {
                                 String errorJson = response.errorBody() != null ? response.errorBody().string() : "{}";
                                 JSONObject jsonObj = new JSONObject(errorJson);
-                                String motivo = jsonObj.optString("motivo", "Imagen no válida o sospechosa.");
+                                String motivo = jsonObj.optString("motivo", jsonObj.optString("error", "Imagen rechazada por el servidor."));
                                 mostrarErrorImagen(motivo);
                             } catch (Exception e) {
                                 mostrarErrorImagen("La imagen fue rechazada por el servidor.");
@@ -968,7 +1101,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == 999) { // El mismo código que usamos arriba
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (tienePermisoUbicacion()) {
 
                 // ¡Permiso concedido! Recargamos el mapa para que busque la ubicación ahora sí
                 if (mMap != null) {
@@ -1081,6 +1214,52 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     // Agrega este metodo en MainActivity
     // 1. MÉTODO PRINCIPAL DEL POPUP
+    private void mostrarDialogoDenuncia(ReporteModelo reporte) {
+        if (currentUser == null || currentUser.getEmail() == null) {
+            Toast.makeText(this, "Inicia sesi\u00f3n para denunciar un reporte", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] motivos = {
+                "Reporte falso", "Contenido inapropiado", "Imagen sospechosa", "Informaci\u00f3n enga\u00f1osa"
+        };
+        new AlertDialog.Builder(this)
+                .setTitle("Reportar como falso o inapropiado")
+                .setItems(motivos, (dialog, which) -> enviarDenuncia(reporte, motivos[which]))
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void enviarDenuncia(ReporteModelo reporte, String motivo) {
+        HashMap<String, String> body = new HashMap<>();
+        body.put("motivo", motivo);
+        body.put("reportado_por", currentUser.getEmail());
+        apiService.denunciarReporte(reporte.getId(), body).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if (response.isSuccessful()) {
+                    boolean enRevision = false;
+                    try {
+                        String json = response.body() != null ? response.body().string() : "{}";
+                        enRevision = new JSONObject(json).optBoolean("en_revision", false);
+                    } catch (Exception ignored) {}
+                    String mensaje = enRevision
+                            ? "Denuncia recibida. El reporte fue enviado a revisi\u00f3n."
+                            : "Gracias. Tu denuncia fue recibida para revisi\u00f3n.";
+                    Toast.makeText(MainActivity.this, mensaje, Toast.LENGTH_LONG).show();
+                    if (enRevision) cargarReportes();
+                } else {
+                    Toast.makeText(MainActivity.this,
+                            "No se pudo enviar la denuncia (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                Toast.makeText(MainActivity.this, "Fallo de red al enviar la denuncia", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void mostrarPopUpDetalle(ReporteModelo reporte) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_detalle_reporte, null);
@@ -1101,6 +1280,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Button btnCerrar = view.findViewById(R.id.btnCerrarDetalle);
         Button btnWhats = view.findViewById(R.id.btnContactarWhats);
         Button btnEliminar = view.findViewById(R.id.btnEliminarDetalle);
+        Button btnDenunciar = view.findViewById(R.id.btnDenunciarReporte);
 
         // Sección de Comentarios
         RecyclerView recyclerComents = view.findViewById(R.id.recyclerComentarios);
@@ -1199,6 +1379,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Botones
             btnEliminar.setVisibility(View.GONE);
             btnWhats.setVisibility(View.VISIBLE);
+            btnDenunciar.setVisibility(View.VISIBLE);
+            btnDenunciar.setOnClickListener(v -> mostrarDialogoDenuncia(reporte));
 
             btnWhats.setOnClickListener(v -> {
                 String telefonoReal = reporte.getPhone(); // <--- Aquí usamos el REAL para que WhatsApp funcione

@@ -175,6 +175,16 @@
                     android:visibility="gone"
                     android:layout_marginBottom="10dp"/>
 
+                <Button
+                    android:id="@+id/btnDenunciarReporte"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="Reportar como falso o inapropiado"
+                    android:background="@drawable/bg_button_danger"
+                    android:textColor="#FFFFFF"
+                    android:visibility="gone"
+                    android:layout_marginBottom="10dp"/>
+
                 <!-- Botón WhatsApp -->
                 <Button
                     android:id="@+id/btnContactarWhats"
