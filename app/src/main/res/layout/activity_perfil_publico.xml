@@ -181,31 +181,30 @@
 
         </androidx.cardview.widget.CardView>
 
-        <!-- Sección: Estadísticas del Usuario (3 Columnas) -->
-        <LinearLayout
+        <!-- Sección: Estadísticas del Usuario (Tarjeta Unificada) -->
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             android:layout_marginTop="16dp"
-            android:baselineAligned="false"
-            android:orientation="horizontal">
+            app:cardBackgroundColor="@color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp">
 
-            <!-- Card 1: Reportes Exitosos -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:layout_weight="1"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="3dp">
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:paddingVertical="18dp">
 
+                <!-- Columna 1: Reportes Exitosos -->
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/txtReportesExitosos"
@@ -213,7 +212,7 @@
                         android:layout_height="wrap_content"
                         android:text="14"
                         android:textColor="@color/primary"
-                        android:textSize="22sp"
+                        android:textSize="24sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -223,28 +222,23 @@
                         android:gravity="center"
                         android:text="Reportes\nExitosos"
                         android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-
+                        android:textSize="12sp" />
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+                <!-- Divisor 1 -->
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginVertical="8dp"
+                    android:background="@color/divider" />
 
-            <!-- Card 2: Devoluciones -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginHorizontal="3dp"
-                android:layout_weight="1"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="3dp">
-
+                <!-- Columna 2: Devoluciones -->
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/txtDevoluciones"
@@ -252,7 +246,7 @@
                         android:layout_height="wrap_content"
                         android:text="9"
                         android:textColor="@color/accent"
-                        android:textSize="22sp"
+                        android:textSize="24sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -262,28 +256,23 @@
                         android:gravity="center"
                         android:text="Objetos\nDevueltos"
                         android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-
+                        android:textSize="12sp" />
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+                <!-- Divisor 2 -->
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginVertical="8dp"
+                    android:background="@color/divider" />
 
-            <!-- Card 3: Antigüedad -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="3dp">
-
+                <!-- Columna 3: Antigüedad -->
                 <LinearLayout
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/txtAntiguedad"
@@ -291,7 +280,7 @@
                         android:layout_height="wrap_content"
                         android:text="6m"
                         android:textColor="@color/gold"
-                        android:textSize="22sp"
+                        android:textSize="24sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -301,13 +290,11 @@
                         android:gravity="center"
                         android:text="Antigüedad\nComunidad"
                         android:textColor="@color/text_secondary"
-                        android:textSize="11sp" />
-
+                        android:textSize="12sp" />
                 </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
-
-        </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
 
         <!-- Medallas / Reconocimientos Comunitarios -->
         <androidx.cardview.widget.CardView
@@ -333,51 +320,52 @@
                     android:textSize="15sp"
                     android:textStyle="bold" />
 
-                <LinearLayout
+                <com.google.android.material.chip.ChipGroup
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
+                    app:chipSpacingVertical="8dp">
 
-                    <TextView
+                    <com.google.android.material.chip.Chip
                         android:id="@+id/badgeLogro1"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_tag_pill"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="6dp"
+                        android:clickable="false"
                         android:text="🕵️‍♂️ Sabueso"
                         android:textColor="@color/primary"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textSize="13sp"
+                        app:chipBackgroundColor="@color/chip_background_state"
+                        app:chipStrokeColor="@color/border_subtle"
+                        app:chipStrokeWidth="1dp" />
 
-                    <TextView
+                    <com.google.android.material.chip.Chip
                         android:id="@+id/badgeLogro2"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/bg_tag_pill"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="6dp"
+                        android:clickable="false"
                         android:text="🌟 Devolvedor"
                         android:textColor="@color/accent"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textSize="13sp"
+                        app:chipBackgroundColor="@color/chip_background_state"
+                        app:chipStrokeColor="@color/border_subtle"
+                        app:chipStrokeWidth="1dp" />
 
-                    <TextView
+                    <com.google.android.material.chip.Chip
                         android:id="@+id/badgeLogro3"
+                        style="@style/Widget.MaterialComponents.Chip.Choice"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_tag_pill"
-                        android:paddingHorizontal="12dp"
-                        android:paddingVertical="6dp"
+                        android:clickable="false"
                         android:text="🛡️ Verificado"
                         android:textColor="@color/primary_dark"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:textSize="13sp"
+                        app:chipBackgroundColor="@color/chip_background_state"
+                        app:chipStrokeColor="@color/border_subtle"
+                        app:chipStrokeWidth="1dp" />
 
-                </LinearLayout>
+                </com.google.android.material.chip.ChipGroup>
 
             </LinearLayout>
 
