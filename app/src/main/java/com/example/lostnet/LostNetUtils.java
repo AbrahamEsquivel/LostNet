@@ -126,4 +126,21 @@ public final class LostNetUtils {
                 ? "⏳ Se elimina en " + dias + "d " + horas + "h"
                 : "⏳ Se elimina en " + horas + "h " + minutos + "m";
     }
+
+    /** Antigüedad corta para el perfil: "Hoy", "12d", "4m" o "1 año"; "—" si no se conoce. */
+    public static String textoAntiguedad(Integer dias) {
+        if (dias == null || dias < 0) return "—";
+        if (dias == 0) return "Hoy";
+        if (dias < 30) return dias + "d";
+        if (dias < 365) return (dias / 30) + "m";
+        int anios = dias / 365;
+        return anios + (anios == 1 ? " año" : " años");
+    }
+
+    /** Texto del nivel de honor según el rango calculado por el servidor. */
+    public static String textoNivelHonor(String rol) {
+        if ("SABUESO".equalsIgnoreCase(rol)) return "🕵️‍♂️ Sabueso Comunitario (Héroe Local)";
+        if ("PERDEDOR".equalsIgnoreCase(rol)) return "🤦‍♂️ En búsqueda activa (Novato)";
+        return "🔍 Buscador Confiable";
+    }
 }
