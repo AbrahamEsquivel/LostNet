@@ -25,6 +25,7 @@ public class PerfilPublicoActivity extends AppCompatActivity {
 
     public static final String EXTRA_USER_ID = "EXTRA_USER_ID";
     public static final String EXTRA_EMAIL = "EXTRA_EMAIL";
+    public static final String EXTRA_PHOTO_URL = "EXTRA_PHOTO_URL";
 
     private ImageView imgAvatarPublico;
     private TextView txtNombrePublico;
@@ -55,9 +56,10 @@ public class PerfilPublicoActivity extends AppCompatActivity {
         // Obtener extras de la intención
         String userId = getIntent().getStringExtra(EXTRA_USER_ID);
         String email = getIntent().getStringExtra(EXTRA_EMAIL);
+        String photoUrl = getIntent().getStringExtra(EXTRA_PHOTO_URL);
 
         configurarListeners();
-        cargarPerfilUsuario(userId, email);
+        cargarPerfilUsuario(userId, email, photoUrl);
     }
 
     private void inicializarVistas() {
@@ -86,7 +88,7 @@ public class PerfilPublicoActivity extends AppCompatActivity {
         }
     }
 
-    private void cargarPerfilUsuario(String userId, String email) {
+    private void cargarPerfilUsuario(String userId, String email, String photoUrl) {
         String correoMostrar = (email != null && !email.isEmpty()) ? email : "usuario@lostnet.com";
         String correoEnmascarado = LostNetUtils.enmascararEmail(correoMostrar);
 
@@ -102,13 +104,22 @@ public class PerfilPublicoActivity extends AppCompatActivity {
         }
         txtNombrePublico.setText(nombreUsuario);
 
-        // Cargar imagen de avatar predeterminada o avatar simulado de alta calidad (Fondo Teal / Accent)
-        Glide.with(this)
-                .load("https://ui-avatars.com/api/?name=" + nombreUsuario + "&background=00B894&color=fff&size=256")
-                .placeholder(android.R.drawable.ic_menu_camera)
-                .error(android.R.drawable.ic_menu_camera)
-                .circleCrop()
-                .into(imgAvatarPublico);
+        // Cargar imagen de avatar (Si el usuario tiene foto usa esa, si no, usa el fallback generado)
+        if (photoUrl != null && !photoUrl.isEmpty()) {
+            Glide.with(this)
+                    .load(photoUrl)
+                    .placeholder(android.R.drawable.ic_menu_camera)
+                    .error(android.R.drawable.ic_menu_camera)
+                    .circleCrop()
+                    .into(imgAvatarPublico);
+        } else {
+            Glide.with(this)
+                    .load("https://ui-avatars.com/api/?name=" + nombreUsuario + "&background=00B894&color=fff&size=256")
+                    .placeholder(android.R.drawable.ic_menu_camera)
+                    .error(android.R.drawable.ic_menu_camera)
+                    .circleCrop()
+                    .into(imgAvatarPublico);
+        }
 
         // Honor y estadísticas reales calculados por el servidor
         mostrarCargando();

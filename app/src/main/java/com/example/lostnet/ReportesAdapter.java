@@ -67,6 +67,7 @@ public class ReportesAdapter extends RecyclerView.Adapter<ReportesAdapter.ViewHo
             Intent intent = new Intent(context, PerfilPublicoActivity.class);
             intent.putExtra(PerfilPublicoActivity.EXTRA_USER_ID, reporte.getUserId());
             intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, reporte.getEmail());
+            intent.putExtra(PerfilPublicoActivity.EXTRA_PHOTO_URL, reporte.getUserPhotoUrl());
             context.startActivity(intent);
         });
 

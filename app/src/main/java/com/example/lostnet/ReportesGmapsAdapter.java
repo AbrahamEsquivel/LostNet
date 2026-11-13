@@ -118,6 +118,7 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
             Intent intent = new Intent(context, PerfilPublicoActivity.class);
             intent.putExtra(PerfilPublicoActivity.EXTRA_USER_ID, r.getUserId());
             intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, r.getEmail());
+            intent.putExtra(PerfilPublicoActivity.EXTRA_PHOTO_URL, r.getUserPhotoUrl());
             context.startActivity(intent);
         });
 

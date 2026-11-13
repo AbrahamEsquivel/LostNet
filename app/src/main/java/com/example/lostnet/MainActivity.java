@@ -340,6 +340,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (panel == null) return;
 
         panel.findViewById(R.id.btnCerrarPerfil).setOnClickListener(v -> profilePanelOverlay.setVisibility(View.GONE));
+        panel.findViewById(R.id.menuVerMiPerfil).setOnClickListener(v -> {
+            profilePanelOverlay.setVisibility(View.GONE);
+            if (currentUser != null) {
+                Intent intent = new Intent(MainActivity.this, PerfilPublicoActivity.class);
+                intent.putExtra(PerfilPublicoActivity.EXTRA_USER_ID, currentUser.getId());
+                intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, currentUser.getEmail());
+                if (currentUser.getPhotoUrl() != null) {
+                    intent.putExtra(PerfilPublicoActivity.EXTRA_PHOTO_URL, currentUser.getPhotoUrl().toString());
+                }
+                startActivity(intent);
+            }
+        });
         panel.findViewById(R.id.menuCerrarSesion).setOnClickListener(v -> {
             profilePanelOverlay.setVisibility(View.GONE);
             cerrarSesion();
@@ -1427,6 +1439,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Intent intent = new Intent(MainActivity.this, PerfilPublicoActivity.class);
             intent.putExtra(PerfilPublicoActivity.EXTRA_USER_ID, reporte.getUserId());
             intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, reporte.getEmail());
+            intent.putExtra(PerfilPublicoActivity.EXTRA_PHOTO_URL, reporte.getUserPhotoUrl());
             startActivity(intent);
         };
 
