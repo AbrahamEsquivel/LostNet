@@ -735,7 +735,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     iconStatus.setColorFilter(ContextCompat.getColor(this, R.color.danger));
                 }
             });
-        }lF1vYrcF95fcF7HhzZTLttvy_fypd80eWjreRDNdoh8
+        }
         // --- LÓGICA DE RECOMPENSA ---
         SwitchMaterial switchRecompensa = view.findViewById(R.id.switchRecompensa);
         android.widget.LinearLayout layoutMontosRecomendados = view.findViewById(R.id.layoutMontosRecomendados);
@@ -754,7 +754,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (chipGroupRecompensas != null) {
                         chipGroupRecompensas.clearCheck();
                     }
-                }lF1vYrcF95fcF7HhzZTLttvy_fypd80eWjreRDNdoh8
+                }
             });
         }
 
