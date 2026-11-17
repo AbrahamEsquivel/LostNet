@@ -129,6 +129,17 @@
 
                     <!-- Menu List style -->
                     <LinearLayout
+                        android:id="@+id/menuVerPerfil"
+                        style="@style/LostNet_ProfileMenuItem">
+                        <ImageView
+                            style="@style/LostNet_ProfileMenuIcon"
+                            android:src="@android:drawable/ic_menu_view"/>
+                        <TextView
+                            style="@style/LostNet_ProfileMenuText"
+                            android:text="Ver Perfil"/>
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/menuMisReportes"
                         style="@style/LostNet_ProfileMenuItem">
                         <ImageView

@@ -227,13 +227,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 6. Configurar Botón Reportar (FAB)
         findViewById(R.id.fabReportar).setOnClickListener(v -> mostrarDialogoReporte());
 
-        findViewById(R.id.btnZoomIn).setOnClickListener(v -> {
-            if (mMap != null) mMap.animateCamera(CameraUpdateFactory.zoomIn());
-        });
-        findViewById(R.id.btnZoomOut).setOnClickListener(v -> {
-            if (mMap != null) mMap.animateCamera(CameraUpdateFactory.zoomOut());
-        });
-
         // 6.5 Configurar Botón Mi Ubicación (FAB)
         findViewById(R.id.fabMiUbicacion).setOnClickListener(v -> {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -340,6 +333,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (panel == null) return;
 
         panel.findViewById(R.id.btnCerrarPerfil).setOnClickListener(v -> profilePanelOverlay.setVisibility(View.GONE));
+        panel.findViewById(R.id.menuVerPerfil).setOnClickListener(v -> {
+            if (currentUser != null && currentUser.getEmail() != null) {
+                Intent intent = new Intent(this, PerfilPublicoActivity.class);
+                intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, currentUser.getEmail());
+                startActivity(intent);
+            }
+        });
         panel.findViewById(R.id.menuCerrarSesion).setOnClickListener(v -> {
             profilePanelOverlay.setVisibility(View.GONE);
             cerrarSesion();
@@ -432,9 +432,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Desactivar UI por defecto de Google Maps
         mMap.getUiSettings().setCompassEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);
-        mMap.getUiSettings().setMyLocationButtonEnabled(
-                tienePermisoUbicacion()
-        );
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setMapToolbarEnabled(false); // También quita botones de "Abrir en Maps"
 
         // --- LÓGICA DE UBICACIÓN REAL ---
@@ -737,8 +735,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     iconStatus.setColorFilter(ContextCompat.getColor(this, R.color.danger));
                 }
             });
-        }
-
+        }lF1vYrcF95fcF7HhzZTLttvy_fypd80eWjreRDNdoh8
         // --- LÓGICA DE RECOMPENSA ---
         SwitchMaterial switchRecompensa = view.findViewById(R.id.switchRecompensa);
         android.widget.LinearLayout layoutMontosRecomendados = view.findViewById(R.id.layoutMontosRecomendados);
@@ -757,7 +754,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (chipGroupRecompensas != null) {
                         chipGroupRecompensas.clearCheck();
                     }
-                }
+                }lF1vYrcF95fcF7HhzZTLttvy_fypd80eWjreRDNdoh8
             });
         }
 
