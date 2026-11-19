@@ -11,7 +11,6 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.GET;
-import retrofit2.http.Headers;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
 import retrofit2.http.Part;
@@ -36,7 +35,6 @@ public interface LostNetApi {
     @POST("comentar")
     Call<Void> enviarComentario(@Body HashMap<String, Object> body);
 
-    @Headers("Connection: close")
     @Multipart
     @POST("reportar")
     Call<ResponseBody> enviarReporte(
@@ -50,11 +48,15 @@ public interface LostNetApi {
             @Part("security_question") RequestBody securityQuestion,
             @Part("security_answer")   RequestBody securityAnswer,
             @Part("status")           RequestBody status,
+            @Part("recompensa")       RequestBody recompensa,
             @Part MultipartBody.Part  foto
     );
 
     @DELETE("reportes/{id}")
     Call<ResponseBody> borrarReporte(@Path("id") String id);
+
+    @POST("reportes/{id}/denunciar")
+    Call<ResponseBody> denunciarReporte(@Path("id") String id, @Body HashMap<String, String> body);
 
     @POST("actualizar-ubicacion")
     Call<Void> actualizarUbicacion(@Body UbicacionRequest request);
@@ -64,6 +66,10 @@ public interface LostNetApi {
 
     @GET("usuario/tipo")
     Call<UsuarioGamificacion> obtenerTipoUsuario(@Query("email") String email);
+
+    /** Honor, confianza, estadísticas y logros calculados por el servidor. */
+    @GET("usuario/perfil-publico")
+    Call<PerfilPublicoModelo> obtenerPerfilPublico(@Query("email") String email);
 
     /** Obtiene los reportes creados por un usuario específico (filtra en el servidor). */
     @GET("mis-reportes")

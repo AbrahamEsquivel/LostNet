@@ -255,7 +255,7 @@
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
                     app:cardBackgroundColor="#F8F9FA"
-                    android:layout_marginBottom="24dp">
+                    android:layout_marginBottom="16dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -289,6 +289,140 @@
                             app:thumbTint="@color/primary"
                             app:trackTint="@color/border_subtle"
                             app:useMaterialThemeColors="false"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+
+                <!-- Sección Recompensa -->
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#F8F9FA"
+                    android:layout_marginBottom="24dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="🎁 Ofrecer Recompensa"
+                                android:textColor="#202124"
+                                android:textSize="14sp"
+                                android:textStyle="bold"/>
+
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/switchRecompensa"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                app:thumbTint="@color/primary"
+                                app:trackTint="@color/border_subtle"
+                                app:useMaterialThemeColors="false"/>
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/layoutMontosRecomendados"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone"
+                            android:layout_marginTop="12dp">
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:id="@+id/layoutMontoRecompensa"
+                                style="@style/LostNet_TextInputLayout"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Monto de la recompensa ($)"
+                                app:startIconDrawable="@android:drawable/ic_menu_compass">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/etMontoRecompensa"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="numberDecimal"
+                                    android:textSize="14sp"/>
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Sugerencias rápidas:"
+                                android:textSize="12sp"
+                                android:textColor="@color/text_secondary"
+                                android:layout_marginTop="8dp"
+                                android:layout_marginBottom="4dp"/>
+
+                            <HorizontalScrollView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:scrollbars="none">
+
+                                <com.google.android.material.chip.ChipGroup
+                                    android:id="@+id/chipGroupRecompensas"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    app:singleLine="true"
+                                    app:singleSelection="true">
+
+                                    <com.google.android.material.chip.Chip
+                                        android:id="@+id/chipRec50"
+                                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="$50"
+                                        app:chipBackgroundColor="@color/chip_background_state"
+                                        android:textColor="@color/chip_text_state"
+                                        app:chipStrokeColor="@color/border_subtle"
+                                        app:chipStrokeWidth="1dp" />
+
+                                    <com.google.android.material.chip.Chip
+                                        android:id="@+id/chipRec100"
+                                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="$100"
+                                        app:chipBackgroundColor="@color/chip_background_state"
+                                        android:textColor="@color/chip_text_state"
+                                        app:chipStrokeColor="@color/border_subtle"
+                                        app:chipStrokeWidth="1dp" />
+
+                                    <com.google.android.material.chip.Chip
+                                        android:id="@+id/chipRec500"
+                                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="$500"
+                                        app:chipBackgroundColor="@color/chip_background_state"
+                                        android:textColor="@color/chip_text_state"
+                                        app:chipStrokeColor="@color/border_subtle"
+                                        app:chipStrokeWidth="1dp" />
+
+                                    <com.google.android.material.chip.Chip
+                                        android:id="@+id/chipRec1000"
+                                        style="@style/Widget.MaterialComponents.Chip.Choice"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="$1000"
+                                        app:chipBackgroundColor="@color/chip_background_state"
+                                        android:textColor="@color/chip_text_state"
+                                        app:chipStrokeColor="@color/border_subtle"
+                                        app:chipStrokeWidth="1dp" />
+                                </com.google.android.material.chip.ChipGroup>
+                            </HorizontalScrollView>
+                        </LinearLayout>
+
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 

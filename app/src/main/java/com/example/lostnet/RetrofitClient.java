@@ -2,6 +2,9 @@ package com.example.lostnet;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import okhttp3.OkHttpClient;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Singleton que provee la instancia de Retrofit y el servicio de API.
@@ -28,8 +31,15 @@ public final class RetrofitClient {
 
     /** Construye un cliente Retrofit para la URL indicada (usado también por las pruebas). */
     static Retrofit construirRetrofit(String baseUrl) {
+        OkHttpClient httpClient = new OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(45, TimeUnit.SECONDS)
+                .writeTimeout(45, TimeUnit.SECONDS)
+                .callTimeout(60, TimeUnit.SECONDS)
+                .build();
         return new Retrofit.Builder()
                 .baseUrl(baseUrl)
+                .client(httpClient)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
     }

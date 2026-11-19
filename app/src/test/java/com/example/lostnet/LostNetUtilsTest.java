@@ -165,4 +165,48 @@ public class LostNetUtilsTest {
         long ahoraMs = 1_000_000_000_000L;
         assertEquals("⚠️ Expira pronto", LostNetUtils.textoExpiracionReporte(ahoraMs / 1000 - 10, ahoraMs));
     }
+
+    // ---------- Perfil público y honor ----------
+
+    @Test
+    public void textoAntiguedad_cubreDiasMesesYAnios() {
+        assertEquals("—", LostNetUtils.textoAntiguedad(null));
+        assertEquals("Hoy", LostNetUtils.textoAntiguedad(0));
+        assertEquals("12d", LostNetUtils.textoAntiguedad(12));
+        assertEquals("4m", LostNetUtils.textoAntiguedad(125));
+        assertEquals("1 año", LostNetUtils.textoAntiguedad(400));
+        assertEquals("2 años", LostNetUtils.textoAntiguedad(800));
+    }
+
+    @Test
+    public void textoNivelHonor_segunRango() {
+        assertTrue(LostNetUtils.textoNivelHonor("SABUESO").contains("Sabueso"));
+        assertTrue(LostNetUtils.textoNivelHonor("perdedor").contains("Novato"));
+        assertTrue(LostNetUtils.textoNivelHonor(null).contains("Buscador"));
+    }
+
+    @Test
+    public void perfilPublico_leeJsonDelServidor() {
+        PerfilPublicoModelo perfil = new Gson().fromJson(
+                "{\"rol\":\"SABUESO\",\"confianza\":95,\"reportes_publicados\":9," +
+                "\"objetos_encontrados\":6,\"dias_en_lostnet\":60,\"logros\":[\"SABUESO\",\"VERIFICADO\"]}",
+                PerfilPublicoModelo.class);
+        assertEquals("SABUESO", perfil.getRol());
+        assertEquals(95, perfil.getConfianza());
+        assertEquals(9, perfil.getReportesPublicados());
+        assertEquals(6, perfil.getObjetosEncontrados());
+        assertEquals(Integer.valueOf(60), perfil.getDiasEnLostnet());
+        assertTrue(perfil.tieneLogro("VERIFICADO"));
+        assertFalse(perfil.tieneLogro("DEVOLVEDOR"));
+    }
+
+    @Test
+    public void perfilPublico_camposFaltantesNoInventanCifras() {
+        PerfilPublicoModelo perfil = new Gson().fromJson("{\"confianza\":150}", PerfilPublicoModelo.class);
+        assertEquals("BUSCADOR", perfil.getRol());
+        assertEquals(100, perfil.getConfianza());
+        assertEquals(0, perfil.getReportesPublicados());
+        assertEquals(null, perfil.getDiasEnLostnet());
+        assertTrue(perfil.getLogros().isEmpty());
+    }
 }
