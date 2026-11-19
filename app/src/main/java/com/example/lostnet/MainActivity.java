@@ -334,6 +334,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         panel.findViewById(R.id.btnCerrarPerfil).setOnClickListener(v -> profilePanelOverlay.setVisibility(View.GONE));
         panel.findViewById(R.id.menuVerPerfil).setOnClickListener(v -> {
+            profilePanelOverlay.setVisibility(View.GONE);
             if (currentUser != null && currentUser.getEmail() != null) {
                 Intent intent = new Intent(this, PerfilPublicoActivity.class);
                 intent.putExtra(PerfilPublicoActivity.EXTRA_EMAIL, currentUser.getEmail());
@@ -344,10 +345,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             profilePanelOverlay.setVisibility(View.GONE);
             cerrarSesion();
         });
-        panel.findViewById(R.id.menuMisReportes).setOnClickListener(v -> startActivity(new Intent(this, MisReportesActivity.class)));
-        panel.findViewById(R.id.menuMisAlertas).setOnClickListener(v -> startActivity(new Intent(this, NotificacionesActivity.class)));
-        panel.findViewById(R.id.menuSobreApp).setOnClickListener(v -> startActivity(new Intent(this, AboutActivity.class)));
-        panel.findViewById(R.id.menuCreditos).setOnClickListener(v -> startActivity(new Intent(this, CreditsActivity.class)));
+        panel.findViewById(R.id.menuMisReportes).setOnClickListener(v -> {
+            profilePanelOverlay.setVisibility(View.GONE);
+            startActivity(new Intent(this, MisReportesActivity.class));
+        });
+        panel.findViewById(R.id.menuMisAlertas).setOnClickListener(v -> {
+            profilePanelOverlay.setVisibility(View.GONE);
+            startActivity(new Intent(this, NotificacionesActivity.class));
+        });
+        panel.findViewById(R.id.menuSobreApp).setOnClickListener(v -> {
+            profilePanelOverlay.setVisibility(View.GONE);
+            startActivity(new Intent(this, AboutActivity.class));
+        });
+        panel.findViewById(R.id.menuCreditos).setOnClickListener(v -> {
+            profilePanelOverlay.setVisibility(View.GONE);
+            startActivity(new Intent(this, CreditsActivity.class));
+        });
 
         if (currentUser != null) actualizarDatosPerfil(currentUser);
     }
@@ -555,6 +568,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 navegarAReporte(reporte);
             });
+            adapter.setMostrarExpiry(true);
             rv.setAdapter(adapter);
         }
     }
@@ -1245,8 +1259,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Toast.makeText(MainActivity.this, mensaje, Toast.LENGTH_LONG).show();
                     if (enRevision) cargarReportes();
                 } else {
-                    Toast.makeText(MainActivity.this,
-                            "No se pudo enviar la denuncia (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                    String mensaje = "No se pudo enviar la denuncia (" + response.code() + ")";
+                    try {
+                        if (response.errorBody() != null) {
+                            String error = new JSONObject(response.errorBody().string()).optString("error", "");
+                            if (!error.isEmpty()) mensaje = error;
+                        }
+                    } catch (Exception ignored) {}
+                    if (response.code() == 409 && mensaje.startsWith("No se pudo")) {
+                        mensaje = "Ya denunciaste este reporte";
+                    }
+                    Toast.makeText(MainActivity.this, mensaje, Toast.LENGTH_LONG).show();
                 }
             }
 

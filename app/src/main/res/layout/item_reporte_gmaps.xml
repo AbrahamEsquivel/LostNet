@@ -1,110 +1,166 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Item de reporte estilo Google Maps para las listas del bottom sheet -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Item de reporte estilo detallado para las listas del bottom sheet -->
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="14dp"
-    android:gravity="center_vertical"
-    android:background="?android:attr/selectableItemBackground"
+    android:layout_marginHorizontal="14dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="#FFFFFF"
     android:clickable="true"
-    android:focusable="true">
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
-    <!-- Thumbnail cuadrado -->
-    <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            app:cardCornerRadius="10dp"
-            app:cardElevation="0dp">
-            <ImageView
-                android:id="@+id/imgGmaps"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@android:drawable/ic_menu_camera"
-                android:background="#F0F0F0"/>
-        </androidx.cardview.widget.CardView>
-
-        <!-- Punto de notificación -->
-        <View
-            android:id="@+id/dotNotificacion"
-            android:layout_width="14dp"
-            android:layout_height="14dp"
-            android:layout_gravity="top|end"
-            android:layout_marginTop="-4dp"
-            android:layout_marginEnd="-4dp"
-            android:background="@drawable/circle_shape"
-            android:backgroundTint="#D93025"
-            android:visibility="gone"
-            android:elevation="4dp"/>
-    </FrameLayout>
-
-    <!-- Datos del reporte -->
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:layout_marginStart="14dp">
+        android:orientation="horizontal"
+        android:padding="14dp"
+        android:gravity="center_vertical">
 
-        <!-- Descripción -->
-        <TextView
-            android:id="@+id/txtGmapsDesc"
+        <!-- Thumbnail cuadrado -->
+        <FrameLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Objeto perdido"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="#1A1A1A"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:layout_marginBottom="3dp"/>
+            android:layout_height="wrap_content">
 
-        <!-- Categoría • Estado -->
-        <TextView
-            android:id="@+id/txtGmapsCatEstado"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Electrónica · Perdido"
-            android:textSize="12sp"
-            android:textColor="#5F6368"
-            android:layout_marginBottom="6dp"/>
+            <androidx.cardview.widget.CardView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="0dp">
+                <ImageView
+                    android:id="@+id/imgGmaps"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_menu_camera"
+                    android:background="#F0F0F0"/>
+            </androidx.cardview.widget.CardView>
 
-        <!-- Badge de estado -->
-        <TextView
-            android:id="@+id/txtGmapsEstadoBadge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🔴 PERDIDO"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:textColor="#D93025"/>
+            <!-- Punto de notificación -->
+            <View
+                android:id="@+id/dotNotificacion"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="-4dp"
+                android:layout_marginEnd="-4dp"
+                android:background="@drawable/circle_shape"
+                android:backgroundTint="#D93025"
+                android:visibility="gone"
+                android:elevation="4dp"/>
+        </FrameLayout>
 
-        <!-- Dias restantes de vigencia; el Adapter asigna el texto real -->
-        <TextView
-            android:id="@+id/txtTiempoExpiry"
-            android:layout_width="wrap_content"
+        <!-- Datos del reporte -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textSize="10sp"
-            android:textColor="#9AA0A6"
-            android:layout_marginTop="2dp"
-            android:visibility="gone"
-            tools:text="Te quedan 10 d&#237;as"/>
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="14dp">
+
+            <!-- Descripción -->
+            <TextView
+                android:id="@+id/txtGmapsDesc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Objeto perdido"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#202124"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:layout_marginBottom="4dp"/>
+
+            <!-- Badges: Estado + Categoría -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+
+                <TextView
+                    android:id="@+id/txtGmapsEstadoBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Perdido"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:background="@drawable/bg_badge_perdido"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"/>
+
+                <TextView
+                    android:id="@+id/txtGmapsCatBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Otros"
+                    android:textSize="11sp"
+                    android:textColor="#5F6368"
+                    android:background="@drawable/bg_badge_categoria"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:layout_marginStart="6dp"/>
+            </LinearLayout>
+
+            <!-- Fecha -->
+            <TextView
+                android:id="@+id/txtGmapsFecha"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="#5F6368"
+                android:layout_marginBottom="3dp"
+                tools:text="16 nov 2026"/>
+
+            <!-- Dias restantes de vigencia -->
+            <TextView
+                android:id="@+id/txtTiempoExpiry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="11sp"
+                android:textColor="#1A73E8"
+                android:textStyle="bold"
+                android:background="@drawable/bg_badge_expiry"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:layout_marginBottom="3dp"
+                android:visibility="gone"
+                tools:text="Quedan 8 días de publicación"/>
+
+            <!-- Categoría · Estado (texto legacy, oculto por defecto) -->
+            <TextView
+                android:id="@+id/txtGmapsCatEstado"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:textSize="12sp"
+                android:textColor="#5F6368"/>
+
+            <!-- Ubicación -->
+            <TextView
+                android:id="@+id/txtGmapsUbicacion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📍 Ubicación en el mapa"
+                android:textSize="11sp"
+                android:textColor="#9AA0A6"
+                android:layout_marginTop="2dp"/>
+
+        </LinearLayout>
+
+        <!-- Flecha / chevron -->
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@android:drawable/ic_media_play"
+            android:alpha="0.3"
+            android:layout_marginStart="4dp"/>
 
     </LinearLayout>
 
-    <!-- Flecha / chevron -->
-    <ImageView
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:src="@android:drawable/arrow_down_float"
-        android:rotation="-90"
-        android:alpha="0.4"/>
-
-</LinearLayout>
+</androidx.cardview.widget.CardView>

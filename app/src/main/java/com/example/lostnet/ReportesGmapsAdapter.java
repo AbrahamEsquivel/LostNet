@@ -13,7 +13,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Adapter para mostrar reportes en estilo Google Maps (bottom sheet).
@@ -63,18 +66,31 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
         // Descripción
         holder.txtDesc.setText(r.getDescription() != null ? r.getDescription() : "Sin descripción");
 
-        // Categoría · Estado
+        // Categoría badge
         String cat = r.getCategory() != null ? r.getCategory() : "General";
-        String status = "FOUND".equals(r.getStatus()) ? "Encontrado" : "Perdido";
-        holder.txtCatEstado.setText(cat + " · " + status);
+        holder.txtCatBadge.setText(cat);
 
-        // Badge de estado
+        // Estado badge con color
+        String status = "FOUND".equals(r.getStatus()) ? "Encontrado" : "Perdido";
+        holder.txtEstadoBadge.setText(status);
         if ("FOUND".equals(r.getStatus())) {
-            holder.txtEstadoBadge.setText("🟢 ENCONTRADO");
-            holder.txtEstadoBadge.setTextColor(0xFF0D8A4E);
+            holder.txtEstadoBadge.setBackgroundResource(R.drawable.bg_badge_encontrado);
         } else {
-            holder.txtEstadoBadge.setText("🔴 PERDIDO");
-            holder.txtEstadoBadge.setTextColor(0xFFD93025);
+            holder.txtEstadoBadge.setBackgroundResource(R.drawable.bg_badge_perdido);
+        }
+
+        // Fecha — calculada a partir de los días restantes y el epoch de expiración
+        if (holder.txtFecha != null) {
+            long expiresEpoch = r.getExpiresAtEpoch();
+            if (expiresEpoch > 0) {
+                // La fecha de creación es aprox. expiresAtEpoch - 10 días (duración estándar)
+                long createdMillis = (expiresEpoch - 10L * 24 * 60 * 60) * 1000L;
+                SimpleDateFormat sdf = new SimpleDateFormat("d MMM yyyy", new Locale("es", "MX"));
+                holder.txtFecha.setText(sdf.format(new Date(createdMillis)));
+                holder.txtFecha.setVisibility(View.VISIBLE);
+            } else {
+                holder.txtFecha.setVisibility(View.GONE);
+            }
         }
 
         // Imagen
@@ -104,9 +120,9 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
             if (dias <= 0) {
                 holder.txtTiempoExpiry.setText("Expirado");
             } else if (dias == 1) {
-                holder.txtTiempoExpiry.setText("Te queda 1 d\u00eda");
+                holder.txtTiempoExpiry.setText("Queda 1 d\u00eda de publicación");
             } else {
-                holder.txtTiempoExpiry.setText("Te quedan " + dias + " d\u00edas");
+                holder.txtTiempoExpiry.setText("Quedan " + dias + " d\u00edas de publicación");
             }
             holder.txtTiempoExpiry.setVisibility(View.VISIBLE);
         } else if (holder.txtTiempoExpiry != null) {
@@ -139,7 +155,7 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imgThumb;
-        TextView txtDesc, txtCatEstado, txtEstadoBadge, txtTiempoExpiry;
+        TextView txtDesc, txtCatEstado, txtEstadoBadge, txtCatBadge, txtFecha, txtTiempoExpiry, txtUbicacion;
         View dot;
 
         ViewHolder(@NonNull View itemView) {
@@ -148,7 +164,10 @@ public class ReportesGmapsAdapter extends RecyclerView.Adapter<ReportesGmapsAdap
             txtDesc = itemView.findViewById(R.id.txtGmapsDesc);
             txtCatEstado = itemView.findViewById(R.id.txtGmapsCatEstado);
             txtEstadoBadge = itemView.findViewById(R.id.txtGmapsEstadoBadge);
+            txtCatBadge = itemView.findViewById(R.id.txtGmapsCatBadge);
+            txtFecha = itemView.findViewById(R.id.txtGmapsFecha);
             txtTiempoExpiry = itemView.findViewById(R.id.txtTiempoExpiry);
+            txtUbicacion = itemView.findViewById(R.id.txtGmapsUbicacion);
             dot = itemView.findViewById(R.id.dotNotificacion);
         }
     }
